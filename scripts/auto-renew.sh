@@ -12,7 +12,7 @@ DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM:-T8TG4WAR43}"
 APP=".build/device/Build/Products/Debug-iphoneos/Yijing64.app"
 
 PROFILE_DAYS_THRESHOLD="${PROFILE_DAYS_THRESHOLD:-3}"
-TUNNEL_ALERT_DAYS="${TUNNEL_ALERT_DAYS:-3}"
+RENEW_NUDGE_GAP="${RENEW_NUDGE_GAP:-86400}"
 NOTIFY_MIN_GAP="${NOTIFY_MIN_GAP:-43200}"
 
 STATE="$ROOT/.build/auto-renew.state"
@@ -66,11 +66,11 @@ write_state() {
 }
 
 notify_once() {
-  local key="$1" title="$2" msg="$3"
+  local key="$1" title="$2" msg="$3" gap="${4:-$NOTIFY_MIN_GAP}"
   local last now
   last="$(read_state "$key")"
   now=$(date +%s)
-  if [ -z "$last" ] || [ $((now - last)) -ge "$NOTIFY_MIN_GAP" ]; then
+  if [ -z "$last" ] || [ $((now - last)) -ge "$gap" ]; then
     notify "$title" "$msg"
     write_state "$key" "$now"
   fi
@@ -144,28 +144,16 @@ echo "设备: pairing=$PAIRING tunnel=$TUNNEL transport=$TRANSPORT 在线=$ONLIN
 
 if [ "$ONLINE" -eq 1 ]; then
   if [ "$(read_state phase)" = "offline" ]; then
-    down_days="$(awk -v a="$NOW" -v b="$(read_state tunnelDownSince)" 'BEGIN{printf "%.2f",(a-b)/86400}')"
-    echo "设备已恢复连接（此前断开 ${down_days} 天，transport=$TRANSPORT）"
-    notify "易经 设备已连接" "iPhone 已连上（${TRANSPORT}），自动续签可用"
+    echo "设备已连接（transport=$TRANSPORT）"
   fi
   write_state phase online
   write_state tunnelDownSince ""
 else
-  phase="$(read_state phase)"
-  if [ "$phase" != "offline" ]; then
+  if [ "$(read_state phase)" != "offline" ]; then
     write_state phase offline
     write_state tunnelDownSince "$NOW"
-    echo "首次发现设备离线，开始计时"
-    if awk -v d="$DAYS_LEFT" -v t="$PROFILE_DAYS_THRESHOLD" 'BEGIN{exit !(d<=t)}'; then
-      notify "易经 需要续签" "描述文件已过期或即将过期，解锁手机并靠近电脑以自动续签"
-    fi
-  else
-    down_days="$(awk -v a="$NOW" -v b="$(read_state tunnelDownSince)" 'BEGIN{printf "%.2f",(a-b)/86400}')"
-    echo "设备持续离线 ${down_days} 天"
-    if awk -v d="$down_days" -v t="$TUNNEL_ALERT_DAYS" 'BEGIN{exit !(d>=t)}'; then
-      notify_once tunnelAlertAt "易经 无线调试断开" "已断开 ${down_days} 天，插线一次即可恢复无线续签"
-    fi
   fi
+  echo "设备未连接（本机 Wi-Fi 有客户端隔离，无线调试不可用；需插数据线）"
 fi
 
 NEED_RENEW=0
@@ -180,7 +168,8 @@ if [ "$NEED_RENEW" -eq 0 ]; then
 fi
 
 if [ "$ONLINE" -eq 0 ]; then
-  echo "=> 需续签但设备离线，等待手机解锁上线（不重复通知）"
+  echo "=> 需续签但设备未连接，已提示插线（每 24h 最多一次）"
+  notify_once renewNudgeAt "易经 需要续签" "描述文件剩 ${DAYS_LEFT} 天，插一次数据线即可自动续签" "$RENEW_NUDGE_GAP"
   exit 0
 fi
 
