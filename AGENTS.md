@@ -45,6 +45,19 @@ bash scripts/sync.sh
   ```
 - **续签**：描述文件过期后直接运行 `bash scripts/sync.sh` 即可。脚本带 `CODE_SIGN_STYLE=Automatic` 与 `-allowProvisioningUpdates`，构建时会联网向 Apple 自动刷新描述文件，再经 `devicectl` 安装；证书未过期则无需重新「信任开发者」
 - **无线更新**：真机已与本机配对（`xcrun devicectl list devices` 显示 `available (paired)`，主机名 `<UDID>.coredevice.local`）。只要 iPhone 与本机在同一 Wi‑Fi、且 Xcode 里启用了 Connect via network，无需数据线即可构建/安装/续签
+  - 注意：iPhone **锁屏时不广播** `_companion-link._tcp`，此时 `tunnelState=unavailable`，无线续签不可用，需解锁（实在不行插一次数据线恢复无线配对）
+- **自动续签（推荐）**：`scripts/auto-renew.sh` + launchd 任务，每 30 分钟自动检查并续签
+  ```
+  bash scripts/auto-renew.sh            # 手动跑一次（行为同 launchd）
+  bash scripts/auto-renew.sh --status   # 只报告状态，不动作、不发通知、不写状态
+  bash scripts/auto-renew.sh --force    # 忽略剩余天数阈值，强制续签
+  launchctl kickstart -k gui/$(id -u)/com.liuzixiang.yijing64.autorenew   # 立即触发一次
+  launchctl print gui/$(id -u)/com.liuzixiang.yijing64.autorenew          # 查看状态
+  ```
+  逻辑：剩余 > 3 天直接退出（不构建）；进入 3 天窗口且手机在线（`pairingState=paired` 且 `tunnelState≠unavailable`）则自动 `xcodebuild -allowProvisioningUpdates` + 重装真机；设备离线只提示一次、不重复轰炸，并单独在**隧道断开满 3 天**时告警（此时 App 尚可用，有从容时间插线）
+  - 日志 `.build/auto-renew.log`，状态 `.build/auto-renew.state`（记录 `phase` / `tunnelDownSince` / `tunnelAlertAt`）
+  - plist 在 `~/Library/LaunchAgents/com.liuzixiang.yijing64.autorenew.plist`（**不入库**，含绝对路径）
+  - 后台跑 `codesign` 时系统可能弹一次钥匙串授权，需点「始终允许」
 - 需要插线或重新信任的情况：证书被吊销 / 换电脑 / 重装系统、设备配对失效或不在同一 Wi‑Fi、换新设备首次安装。此时在 iPhone「设置 → 通用 → VPN 与设备管理」重新信任开发者
 - 免费账号额度：每 7 天约可创建 10 个 App ID 等（本项目复用同一 App ID，一般不会触发）
 
