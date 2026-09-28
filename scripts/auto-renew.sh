@@ -36,6 +36,11 @@ if [ "$MODE" != "--status" ]; then
   echo $$ >"$LOCK/pid"
   trap 'rm -rf "$LOCK" 2>/dev/null || true' EXIT INT TERM
   exec >>"$LOG" 2>&1
+  jitter=$((RANDOM % ${JITTER_MAX_SECONDS:-300}))
+  if [ "$jitter" -gt 0 ]; then
+    echo "随机抖动 ${jitter}s（避免固定间隔与使用习惯同步）"
+    sleep "$jitter"
+  fi
 fi
 
 echo "===== $(date '+%Y-%m-%d %H:%M:%S') mode=$MODE ====="
@@ -105,7 +110,7 @@ DEV_JSON="$(mktemp -t autorew)"
 xcrun devicectl list devices --json-output "$DEV_JSON" >/dev/null 2>&1 || true
 DEV_STATE="$(python3 - "$DEV_JSON" "$DEVICE_UDID" <<'PY'
 import json, sys
-pairing, tunnel, found = "notfound", "unavailable", False
+pairing, tunnel, transport, found = "notfound", "unavailable", "none", False
 try:
     with open(sys.argv[1]) as fh:
         data = json.load(fh)
@@ -115,16 +120,19 @@ try:
             conn = dev.get("connectionProperties", {})
             pairing = conn.get("pairingState", "unknown")
             tunnel = conn.get("tunnelState", "unavailable")
+            transport = conn.get("transportType") or "none"
             found = True
             break
 except Exception:
     pass
-print(pairing, tunnel if found else "notfound")
+print(pairing, tunnel if found else "notfound", transport)
 PY
 )"
 rm -f "$DEV_JSON"
 PAIRING="${DEV_STATE%% *}"
-TUNNEL="${DEV_STATE##* }"
+REST="${DEV_STATE#* }"
+TUNNEL="${REST%% *}"
+TRANSPORT="${REST##* }"
 
 ONLINE=0
 if [ "$PAIRING" = "paired" ] && [ "$TUNNEL" != "unavailable" ] && [ "$TUNNEL" != "notfound" ]; then
@@ -132,13 +140,13 @@ if [ "$PAIRING" = "paired" ] && [ "$TUNNEL" != "unavailable" ] && [ "$TUNNEL" !=
 fi
 
 echo "描述文件: $EXP_RAW (剩余 ${DAYS_LEFT} 天)"
-echo "设备: pairing=$PAIRING tunnel=$TUNNEL 在线=$ONLINE"
+echo "设备: pairing=$PAIRING tunnel=$TUNNEL transport=$TRANSPORT 在线=$ONLINE"
 
 if [ "$ONLINE" -eq 1 ]; then
   if [ "$(read_state phase)" = "offline" ]; then
     down_days="$(awk -v a="$NOW" -v b="$(read_state tunnelDownSince)" 'BEGIN{printf "%.2f",(a-b)/86400}')"
-    echo "无线隧道已恢复（此前断开 ${down_days} 天）"
-    notify "易经 无线已恢复" "iPhone 无线调试已重新连接，可以自动续签了"
+    echo "设备已恢复连接（此前断开 ${down_days} 天，transport=$TRANSPORT）"
+    notify "易经 设备已连接" "iPhone 已连上（${TRANSPORT}），自动续签可用"
   fi
   write_state phase online
   write_state tunnelDownSince ""
