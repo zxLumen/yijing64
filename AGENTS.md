@@ -45,7 +45,16 @@ bash scripts/sync.sh
   ```
 - **续签**：描述文件过期后直接运行 `bash scripts/sync.sh` 即可。脚本带 `CODE_SIGN_STYLE=Automatic` 与 `-allowProvisioningUpdates`，构建时会联网向 Apple 自动刷新描述文件，再经 `devicectl` 安装；证书未过期则无需重新「信任开发者」
 - **无线更新**：真机已与本机配对（`xcrun devicectl list devices` 显示 `available (paired)`，主机名 `<UDID>.coredevice.local`）。只要 iPhone 与本机在同一 Wi‑Fi、且 Xcode 里启用了 Connect via network，无需数据线即可构建/安装/续签
-  - 注意：iPhone **锁屏时不广播** `_companion-link._tcp`，此时 `tunnelState=unavailable`，无线续签不可用，需解锁（实在不行插一次数据线恢复无线配对）
+  - 注意：iPhone **锁屏时不广播** `_companion-link._tcp`，此时 `tunnelState=unavailable`，无线续签不可用，需解锁
+  - **无线协商坏掉时的修复**（症状：手机已解锁、同一 Wi‑Fi，但 `tunnelState` 恒为 `unavailable`、Bonjour 里只有 Mac）：打开 **Xcode → Window ▸ Devices and Simulators**（快捷键 `⇧⌘2`），选中 iPhone，把勾选项 **「Connects via Network when wired connection is not available」关掉再打开**，强制重新协商。实测这一步让 `tunnelState` 从 `disconnected` 变为 `connected`、`ddiServicesAvailable` 从 `False` 变为 `True`
+  - 排查用只读探针：
+    ```
+    xcrun devicectl list devices                                             # State 应为 connected/available (paired)
+    xcrun devicectl list devices --json-output /tmp/d.json && python3 -c '...'  # 看 tunnelState / transportType
+    dns-sd -B _companion-link._tcp local                                     # 正常时能看到 iPhone 实例
+    system_profiler SPUSBDataType | grep -i iphone                           # 有线时应有输出；无输出=线有问题（可能纯充电线）
+    ```
+  - 注意 `connectionProperties` 里**顶层 `identifier` 是隧道 ID（UUID），不是 UDID**；UDID 在 `hardwareProperties.udid`，脚本匹配时别搞混
 - **自动续签（推荐）**：`scripts/auto-renew.sh` + launchd 任务，每 30 分钟自动检查并续签
   ```
   bash scripts/auto-renew.sh            # 手动跑一次（行为同 launchd）
