@@ -44,26 +44,28 @@ bash scripts/sync.sh
   security cms -D -i ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision | grep -A1 ExpirationDate
   ```
 - **续签**：描述文件过期后直接运行 `bash scripts/sync.sh` 即可。脚本带 `CODE_SIGN_STYLE=Automatic` 与 `-allowProvisioningUpdates`，构建时会联网向 Apple 自动刷新描述文件，再经 `devicectl` 安装；证书未过期则无需重新「信任开发者」
-- **无线更新**：真机已与本机配对（`xcrun devicectl list devices` 显示 `available (paired)`）。只要 iPhone 与本机在同一 Wi‑Fi（且手机解锁亮屏）即可构建/安装/续签，无需数据线。实测 `transportType=localNetwork` 时 `devicectl device info lockState` 可实时返回、`tunnelState=connected`
-  - **前提条件**：iPhone 必须**解锁亮屏**。锁屏时 iOS 停掉 `_remotepairing` 广播、也不回 ICMP，此时 `tunnelState=unavailable`
+- **无线更新（本机 Wi-Fi 下实测不通，续签请插数据线）**
+  - 现象：Mac 与 iPhone 同在 `192.168.1.0/24`、同 SSID，手机解锁亮屏、`_remotepairing._tcp` 正常广播，但 `devicectl` 所有实时命令报 `device not found`、`tunnelState=unavailable`、TCP 49152 不通。**插数据线后一切正常**（`Acquired tunnel connection`、`tunnelState=connected`）
+  - **已排除的原因**（都实测过，不要重复排查）：
+    - 路由器：SG659HZ 固件 `Right=2` 普通用户登录后逐页确认 —— 防火墙等级虽显示「高」但「防攻击保护」**未勾选故不生效**（页面原文：「防攻击保护」勾选时防火墙等级设置方可生效）、MAC 过滤未启用、URL 过滤未启用、UPnP 见 `app_upnp_conf_t.gch`
+    - 配对：`devicectl manage unpair` + `manage pair` 重建后**仍然不通**，所以不是配对损坏
+    - macOS 本地网络隐私：`devicectl` 是 Apple 系统工具，有线下工作正常，不受该权限影响
+  - **iPhone 热点下一切正常**（`172.20.10.x`、`transportType=localNetwork`、TCP 49152 开放）。⚠️ 注意 iPhone 个人热点在 macOS 的 Wi‑Fi 列表里就是个普通网络名（实测为 `Zixiang的iPhone`），容易误以为「还在连原来的 Wi‑Fi」，实测前务必用 `ifconfig en0 | grep 'inet '` 确认网段
+  - 结论：**问题在 iPhone 端**——正常 Wi‑Fi 关联下丢弃入站单播，热点模式行为不同。无线续签不可依赖，**自动化按有线设计**
   - ⚠️ **不要用 ping 判断连通性**：iOS 在有线/无线下都不响应 ICMP（实测有线连接正常时 `ping 192.168.1.2` 依然 100% 丢包），唯一可信的探针是 `xcrun devicectl device info lockState --device <UDID>`
+  - ⚠️ **ARP 能解析 ≠ 单播互通**：ARP 请求是广播、回复才是单播，能解析只证明一个方向通。且 macOS 的 ARP 表会残留**失效条目**（状态位 `I`），不可作为设备在线的证据
   - ⚠️ **不要动 Xcode 的「Connects via Network when wired connection is not available」开关**：它只决定「未插线时是否启用无线」，与连不通无关，反复开关只会扰乱状态
-  - **无线不通时的排查顺序**：
+  - 若日后要在其他网络下验证无线，可用只读探针：
     ```
-    # 1) 手机是否解锁亮屏、是否真在同一个 SSID（iPhone：设置 → 无线局域网 看 SSID 和 IP）
-    # 2) 手机是否广播（手机解锁后应立刻出现）
-    dns-sd -B _remotepairing._tcp local
-    # 3) 路由器是否拦截客户端间单播（ARP/组播通但 TCP 不通 = 典型被拦）
-    nc -z -G 3 <手机IP> 49152
-    # 4) 终极对照：iPhone 开个人热点、Mac 连上去（172.20.10.x），再测 1)/3)
-    #    热点通 + 家里不通 = 路由器问题；热点也不通 = 配对问题，走 unpair/pair
+    dns-sd -B _remotepairing._tcp local    # 手机解锁后应立刻出现
+    nc -z -G 3 <手机IP> 49152              # 无线调试端口
+    xcrun devicectl device info lockState --device <UDID>
     ```
-  - **配对失效（症状：手机解锁同网段、`_remotepairing` 在广播，但 `tunnelState` 恒为 `unavailable`、所有实时命令报 `device not found`）**：直接重新配对
+  - 描述文件过期后重新 provision 并重装真机版**会**触发配对失效（`tunnelState` 恒 `unavailable`），此时 `unpair` + `pair` 可恢复有线/无线的隧道协商：
     ```
     xcrun devicectl manage unpair --device <UDID>   # 需插数据线
     xcrun devicectl manage pair --device <UDID>     # 手机解锁亮屏，弹「信任此电脑」要信任
     ```
-    常见触发时机：**描述文件过期后重新 provision 并重装真机版**（本项目实际踩过：续签成功后无线就断了，`unpair`+`pair` 立即恢复）
   - 注意 `connectionProperties` 里**顶层 `identifier` 是隧道 ID（UUID），不是 UDID**；UDID 在 `hardwareProperties.udid`，脚本匹配时别搞混
 - **自动续签（推荐）**：`scripts/auto-renew.sh` + launchd 任务，每 30 分钟自动检查并续签
   ```
@@ -73,8 +75,9 @@ bash scripts/sync.sh
   launchctl kickstart -k gui/$(id -u)/com.liuzixiang.yijing64.autorenew   # 立即触发一次
   launchctl print gui/$(id -u)/com.liuzixiang.yijing64.autorenew          # 查看状态
   ```
-  逻辑：剩余 > 3 天直接退出（不构建）；进入 3 天窗口且设备已连接（`pairingState=paired` 且 `transportType` 非空，**无线 `localNetwork` 优先、有线 `wired` 兜底**）则自动 `xcodebuild -allowProvisioningUpdates` + 重装真机；设备未连接则**每 24h 最多提示一次「解锁手机同 Wi-Fi 即可，不行就插线」**，不轰炸
+  逻辑：剩余 > 3 天直接退出（不构建）；进入 3 天窗口且设备在线（`pairingState=paired` 且 `transportType` 非空，**无线 `localNetwork` 优先、有线 `wired` 兜底**）则自动 `xcodebuild -allowProvisioningUpdates` + 重装真机；设备未连接则**每 24h 最多提示一次「解锁手机同 Wi-Fi 即可，不行就插线」**，不轰炸
   - 每轮检查前随机 `sleep 0~300s`（`JITTER_MAX_SECONDS`），避免固定 30 分钟网格与使用习惯锁相
+  - `transportType` 可能残留在本地缓存里，脚本会用 `devicectl device info lockState` **真实探针复核**，通不过就判定离线，避免续签白跑
   - 日志 `.build/auto-renew.log`，状态 `.build/auto-renew.state`（记录 `phase` / `tunnelDownSince` / `renewNudgeAt` / `lastRenewAt`）
   - plist 在 `~/Library/LaunchAgents/com.liuzixiang.yijing64.autorenew.plist`（**不入库**，含绝对路径）
   - 后台跑 `codesign` 时系统可能弹一次钥匙串授权，需点「始终允许」

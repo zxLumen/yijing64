@@ -151,6 +151,17 @@ fi
 echo "描述文件: $EXP_RAW (剩余 ${DAYS_LEFT} 天)"
 echo "设备: pairing=$PAIRING tunnel=$TUNNEL transport=$TRANSPORT 在线=$ONLINE"
 
+# transportType 可能残留在本地缓存里，用真实命令复核（唯一可信的在线判据）
+if [ "$ONLINE" -eq 1 ]; then
+  if xcrun devicectl device info lockState --device "$DEVICE_UDID" >/dev/null 2>&1; then
+    echo "实时探针: 通过（设备确实可达）"
+  else
+    echo "实时探针: 失败（transportType 为陈旧缓存，判定为离线）"
+    ONLINE=0
+    PAIRING=online-may-stale
+  fi
+fi
+
 if [ "$ONLINE" -eq 1 ]; then
   if [ "$(read_state phase)" = "offline" ]; then
     echo "设备已连接（transport=$TRANSPORT）"
@@ -162,7 +173,7 @@ else
     write_state phase offline
     write_state tunnelDownSince "$NOW"
   fi
-  echo "设备未连接（无线需手机解锁亮屏且与 Mac 同网段；不可用时插数据线即可）"
+  echo "设备未连接（无线需手机解锁亮屏；本机 Wi-Fi 下无线实测不通，请插数据线）"
 fi
 
 NEED_RENEW=0
@@ -178,7 +189,7 @@ fi
 
 if [ "$ONLINE" -eq 0 ]; then
   echo "=> 需续签但设备未连接，已提示（每 24h 最多一次）"
-  notify_once renewNudgeAt "易经 需要续签" "描述文件剩 ${DAYS_LEFT} 天：解锁手机保持同 Wi-Fi 即可自动续签；不行就插一次数据线" "$RENEW_NUDGE_GAP"
+  notify_once renewNudgeAt "易经 需要续签" "描述文件剩 ${DAYS_LEFT} 天：本机 Wi-Fi 下无线不可用，请插一次数据线" "$RENEW_NUDGE_GAP"
   exit 0
 fi
 
