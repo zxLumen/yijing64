@@ -36,7 +36,10 @@ if [ "$MODE" != "--status" ]; then
   echo $$ >"$LOCK/pid"
   trap 'rm -rf "$LOCK" 2>/dev/null || true' EXIT INT TERM
   exec >>"$LOG" 2>&1
-  jitter=$((RANDOM % ${JITTER_MAX_SECONDS:-300}))
+  jitter=0
+  if [ "${JITTER_MAX_SECONDS:-300}" -gt 0 ]; then
+    jitter=$((RANDOM % JITTER_MAX_SECONDS))
+  fi
   if [ "$jitter" -gt 0 ]; then
     echo "随机抖动 ${jitter}s（避免固定间隔与使用习惯同步）"
     sleep "$jitter"
@@ -135,7 +138,13 @@ TUNNEL="${REST%% *}"
 TRANSPORT="${REST##* }"
 
 ONLINE=0
-if [ "$PAIRING" = "paired" ] && [ "$TUNNEL" != "unavailable" ] && [ "$TUNNEL" != "notfound" ]; then
+# 无线（localNetwork）或有線（wired）任一可用即视为在线；tunnel 不可靠时以 transportType 兜底
+TRANSPORT_OK=0
+case "$TRANSPORT" in
+  ""|none|None|null) TRANSPORT_OK=0 ;;
+  *) TRANSPORT_OK=1 ;;
+esac
+if [ "$PAIRING" = "paired" ] && { { [ "$TUNNEL" != "unavailable" ] && [ "$TUNNEL" != "notfound" ]; } || [ "$TRANSPORT_OK" -eq 1 ]; }; then
   ONLINE=1
 fi
 
@@ -153,7 +162,7 @@ else
     write_state phase offline
     write_state tunnelDownSince "$NOW"
   fi
-  echo "设备未连接（本机 Wi-Fi 有客户端隔离，无线调试不可用；需插数据线）"
+  echo "设备未连接（无线需手机解锁亮屏且与 Mac 同网段；不可用时插数据线即可）"
 fi
 
 NEED_RENEW=0
@@ -168,8 +177,8 @@ if [ "$NEED_RENEW" -eq 0 ]; then
 fi
 
 if [ "$ONLINE" -eq 0 ]; then
-  echo "=> 需续签但设备未连接，已提示插线（每 24h 最多一次）"
-  notify_once renewNudgeAt "易经 需要续签" "描述文件剩 ${DAYS_LEFT} 天，插一次数据线即可自动续签" "$RENEW_NUDGE_GAP"
+  echo "=> 需续签但设备未连接，已提示（每 24h 最多一次）"
+  notify_once renewNudgeAt "易经 需要续签" "描述文件剩 ${DAYS_LEFT} 天：解锁手机保持同 Wi-Fi 即可自动续签；不行就插一次数据线" "$RENEW_NUDGE_GAP"
   exit 0
 fi
 

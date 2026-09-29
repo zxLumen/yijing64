@@ -44,12 +44,26 @@ bash scripts/sync.sh
   security cms -D -i ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision | grep -A1 ExpirationDate
   ```
 - **续签**：描述文件过期后直接运行 `bash scripts/sync.sh` 即可。脚本带 `CODE_SIGN_STYLE=Automatic` 与 `-allowProvisioningUpdates`，构建时会联网向 Apple 自动刷新描述文件，再经 `devicectl` 安装；证书未过期则无需重新「信任开发者」
-- **无线更新（本项目当前网络下不可用）**：真机已与本机配对（曾见 `available (paired)`，主机名 `<UDID>.coredevice.local`），但**日常使用的那张 Wi‑Fi（`CU_77qd_5G`）开启了客户端隔离**：
-  - 实测 Mac `ping 192.168.1.2`（手机）100% 丢包、`nc -z 192.168.1.2 49152` 不可达；反向在 Mac 开 `python3 -m http.server 8080`，手机 Safari 打不开 `http://192.168.1.4:8080`，日志里零请求 → **双向都被路由器隔离**
-  - 但 mDNS 仍能看到手机的 `_remotepairing._tcp`（`ZixiangtekiiPhone.local → 192.168.1.2`），容易误判为「无线可用」；`devicectl` 的 `tunnelState` 也**不可靠**（可能 `unavailable` 而设备实际可达，或反之），因此所有实时命令（`device info lockState/apps/processes`）都报 `device not found`
-  - 结论：**要无线调试，必须先关掉路由器的「客户端隔离 / AP Isolation」**；否则无线续签物理上不可能，只能插线
-  - 若哪天换到无隔离的网络，可用只读探针确认：`dns-sd -B _companion-link._tcp local` 里能看到 iPhone，且 `xcrun devicectl device info lockState --device <UDID>` 能实时返回
-  - 有线排查：`system_profiler SPUSBDataType | grep -i iphone` 无输出 = 线有问题（**纯充电线不会有输出**，实测踩过）
+- **无线更新**：真机已与本机配对（`xcrun devicectl list devices` 显示 `available (paired)`）。只要 iPhone 与本机在同一 Wi‑Fi（且手机解锁亮屏）即可构建/安装/续签，无需数据线。实测 `transportType=localNetwork` 时 `devicectl device info lockState` 可实时返回、`tunnelState=connected`
+  - **前提条件**：iPhone 必须**解锁亮屏**。锁屏时 iOS 停掉 `_remotepairing` 广播、也不回 ICMP，此时 `tunnelState=unavailable`
+  - ⚠️ **不要用 ping 判断连通性**：iOS 在有线/无线下都不响应 ICMP（实测有线连接正常时 `ping 192.168.1.2` 依然 100% 丢包），唯一可信的探针是 `xcrun devicectl device info lockState --device <UDID>`
+  - ⚠️ **不要动 Xcode 的「Connects via Network when wired connection is not available」开关**：它只决定「未插线时是否启用无线」，与连不通无关，反复开关只会扰乱状态
+  - **无线不通时的排查顺序**：
+    ```
+    # 1) 手机是否解锁亮屏、是否真在同一个 SSID（iPhone：设置 → 无线局域网 看 SSID 和 IP）
+    # 2) 手机是否广播（手机解锁后应立刻出现）
+    dns-sd -B _remotepairing._tcp local
+    # 3) 路由器是否拦截客户端间单播（ARP/组播通但 TCP 不通 = 典型被拦）
+    nc -z -G 3 <手机IP> 49152
+    # 4) 终极对照：iPhone 开个人热点、Mac 连上去（172.20.10.x），再测 1)/3)
+    #    热点通 + 家里不通 = 路由器问题；热点也不通 = 配对问题，走 unpair/pair
+    ```
+  - **配对失效（症状：手机解锁同网段、`_remotepairing` 在广播，但 `tunnelState` 恒为 `unavailable`、所有实时命令报 `device not found`）**：直接重新配对
+    ```
+    xcrun devicectl manage unpair --device <UDID>   # 需插数据线
+    xcrun devicectl manage pair --device <UDID>     # 手机解锁亮屏，弹「信任此电脑」要信任
+    ```
+    常见触发时机：**描述文件过期后重新 provision 并重装真机版**（本项目实际踩过：续签成功后无线就断了，`unpair`+`pair` 立即恢复）
   - 注意 `connectionProperties` 里**顶层 `identifier` 是隧道 ID（UUID），不是 UDID**；UDID 在 `hardwareProperties.udid`，脚本匹配时别搞混
 - **自动续签（推荐）**：`scripts/auto-renew.sh` + launchd 任务，每 30 分钟自动检查并续签
   ```
@@ -59,12 +73,12 @@ bash scripts/sync.sh
   launchctl kickstart -k gui/$(id -u)/com.liuzixiang.yijing64.autorenew   # 立即触发一次
   launchctl print gui/$(id -u)/com.liuzixiang.yijing64.autorenew          # 查看状态
   ```
-  逻辑：剩余 > 3 天直接退出（不构建）；进入 3 天窗口且设备已连接（`pairingState=paired` 且 `transportType` 非空，有线/无线均可）则自动 `xcodebuild -allowProvisioningUpdates` + 重装真机；设备未连接则**每 24h 最多提示一次「插一次数据线即可自动续签」**，不轰炸
+  逻辑：剩余 > 3 天直接退出（不构建）；进入 3 天窗口且设备已连接（`pairingState=paired` 且 `transportType` 非空，**无线 `localNetwork` 优先、有线 `wired` 兜底**）则自动 `xcodebuild -allowProvisioningUpdates` + 重装真机；设备未连接则**每 24h 最多提示一次「解锁手机同 Wi-Fi 即可，不行就插线」**，不轰炸
   - 每轮检查前随机 `sleep 0~300s`（`JITTER_MAX_SECONDS`），避免固定 30 分钟网格与使用习惯锁相
   - 日志 `.build/auto-renew.log`，状态 `.build/auto-renew.state`（记录 `phase` / `tunnelDownSince` / `renewNudgeAt` / `lastRenewAt`）
   - plist 在 `~/Library/LaunchAgents/com.liuzixiang.yijing64.autorenew.plist`（**不入库**，含绝对路径）
   - 后台跑 `codesign` 时系统可能弹一次钥匙串授权，需点「始终允许」
-- 需要插线或重新信任的情况：证书被吊销 / 换电脑 / 重装系统、设备配对失效、换新设备首次安装、以及**当前需求下的每周续签（本机 Wi‑Fi 有客户端隔离，无线不可用，只能插线；脚本会在到期前 3 天提醒）**。需要重新信任时在 iPhone「设置 → 通用 → VPN 与设备管理」操作
+- 需要插线或重新信任的情况：证书被吊销 / 换电脑 / 重装系统、设备配对失效、换新设备首次安装；以及无线中途失效时按上面的「无线不通时的排查顺序」处理。需要重新信任时在 iPhone「设置 → 通用 → VPN 与设备管理」操作
 - 免费账号额度：每 7 天约可创建 10 个 App ID 等（本项目复用同一 App ID，一般不会触发）
 
 ## 发版流程
