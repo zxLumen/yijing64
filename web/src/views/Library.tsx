@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { CastRecord, CastResult } from '../core/types.js'
 import { ALL, contentByNumber, findByNumber } from '../core/hexagramData.js'
 import { staticLines } from '../core/lineType.js'
@@ -13,12 +13,25 @@ import ChatStream from '../components/ChatStream.js'
 import { useInterpretation } from '../lib/useInterpretation.js'
 import { newId, type SessionInfo } from '../lib/api.js'
 
-type Props = { session: SessionInfo }
+type Props = {
+  session: SessionInfo
+  /** 外部请求打开的卦序（如点击起卦结果的本/互/变卦） */
+  focusNumber?: number | null
+  onFocusConsumed?: () => void
+}
 
-export default function LibraryView({ session }: Props) {
+export default function LibraryView({ session, focusNumber, onFocusConsumed }: Props) {
   const [query, setQuery] = useState('')
   const [number, setNumber] = useState<number | null>(null)
   const chat = useInterpretation()
+
+  useEffect(() => {
+    if (focusNumber == null) return
+    setNumber(focusNumber)
+    chat.load(null)
+    onFocusConsumed?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusNumber])
 
   const list = useMemo(() => (query.trim() ? search(query) : ALL), [query])
   const hexagram = useMemo(() => (number === null ? null : findByNumber(number)), [number])

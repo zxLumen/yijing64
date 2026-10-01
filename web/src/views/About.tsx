@@ -134,11 +134,6 @@ export default function AboutView({ session, onSessionChanged }: Props) {
           （铜钱 / 梅花 / 卦象推导 / 互错综卦 / 体用 / 卦库检索 / 解卦提示词），Web
           与原生共用同一套算法，只是把「本地存储 + 本地 Key」换成「服务端按数据域隔离」。
         </p>
-        <p>
-          六十四卦结构表取自 <code>HexagramData.swift</code>，卦辞、爻辞与白话取自仓库{' '}
-          <code>scripts/hexagram_content.json</code> 与 <code>scripts/divination.json</code>
-          ，由 <code>scripts/export_web_data.py</code> 导出为 <code>web/src/data/*.json</code>。
-        </p>
       </section>
 
       <section className="card">

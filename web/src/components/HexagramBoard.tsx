@@ -23,18 +23,17 @@ type Props = {
   lines?: LineType[]
   /** 是否显示上爻在最上的完整六爻 */
   full?: boolean
-  compact?: boolean
 }
 
 /**
  * 卦象图：卦名 + 上下卦 + 六爻。上爻在上（与纸质卦辞同序）。
  */
-export default function HexagramBoard({ hexagram, lines, full = true, compact = false }: Props) {
+export default function HexagramBoard({ hexagram, lines, full = true }: Props) {
   const shown = lines ?? staticLines(hexagram)
   const order = [5, 4, 3, 2, 1, 0]
 
   return (
-    <div className="hexagram" data-compact={compact || undefined}>
+    <div className="hexagram">
       <div className="hexagram-head">
         <div>
           <strong className="hexagram-name">{hexagram.name}</strong>
@@ -69,26 +68,47 @@ export function HexagramTrio({
   changed,
   mutual,
   lines,
+  onOpen,
 }: {
   original: Hexagram
   changed: Hexagram
   mutual: Hexagram
   lines?: LineType[]
+  /** 点击三联中的卦 → 在卦库打开对应卦（可选） */
+  onOpen?: (kingWenNumber: number) => void
 }) {
+  const cell = (tag: string, hexagram: Hexagram, cellLines?: LineType[]) => {
+    const open = onOpen ? () => onOpen(hexagram.kingWenNumber) : undefined
+    return (
+      <div
+        className="trio-cell"
+        data-clickable={onOpen ? true : undefined}
+        role={onOpen ? 'button' : undefined}
+        tabIndex={onOpen ? 0 : undefined}
+        title={onOpen ? `在卦库查看「${hexagram.fullName}」` : undefined}
+        onClick={open}
+        onKeyDown={
+          open
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  open()
+                }
+              }
+            : undefined
+        }
+      >
+        <span className="trio-tag">{tag}</span>
+        <HexagramBoard hexagram={hexagram} lines={cellLines} />
+      </div>
+    )
+  }
+
   return (
     <div className="hexagram-trio">
-      <div>
-        <span className="trio-tag">本卦</span>
-        <HexagramBoard hexagram={original} lines={lines} />
-      </div>
-      <div>
-        <span className="trio-tag">互卦</span>
-        <HexagramBoard hexagram={mutual} compact />
-      </div>
-      <div>
-        <span className="trio-tag">变卦</span>
-        <HexagramBoard hexagram={changed} compact />
-      </div>
+      {cell('本卦', original, lines)}
+      {cell('互卦', mutual)}
+      {cell('变卦', changed)}
     </div>
   )
 }

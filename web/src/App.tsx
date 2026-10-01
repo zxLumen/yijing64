@@ -19,9 +19,27 @@ type TabId = (typeof TABS)[number]['id']
 
 export default function App() {
   const [tab, setTab] = useState<TabId>('cast')
+  /** 首次访问过的 Tab 保持挂载（仅隐藏），切走再回来不丢临时状态 */
+  const [visited, setVisited] = useState<Set<TabId>>(() => new Set<TabId>(['cast']))
   const [session, setSession] = useState<SessionInfo | null>(null)
   const [records, setRecords] = useState<CastRecord[]>([])
   const [error, setError] = useState('')
+  /** 从起卦/排卦/记录的「本·互·变」跳到卦库时要打开的第几卦 */
+  const [libraryFocus, setLibraryFocus] = useState<number | null>(null)
+
+  const selectTab = useCallback((id: TabId) => {
+    setVisited((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
+    setTab(id)
+  }, [])
+
+  /** 在卦库打开指定卦（供三联点击调用） */
+  const openInLibrary = useCallback(
+    (kingWenNumber: number) => {
+      setLibraryFocus(kingWenNumber)
+      selectTab('library')
+    },
+    [selectTab],
+  )
 
   const loadSession = useCallback(async () => {
     try {
@@ -75,7 +93,7 @@ export default function App() {
 
       <nav className="tabs">
         {TABS.map((item) => (
-          <button key={item.id} type="button" className={item.id === tab ? 'active' : ''} onClick={() => setTab(item.id)}>
+          <button key={item.id} type="button" className={item.id === tab ? 'active' : ''} onClick={() => selectTab(item.id)}>
             {item.label}
             {item.id === 'records' && records.length > 0 && <i>{records.length}</i>}
           </button>
@@ -83,14 +101,37 @@ export default function App() {
       </nav>
 
       <div className="body">
-        {/* 每个 Tab 独立挂载：切走即丢弃临时状态 */}
-        {tab === 'cast' && <CastView session={session} onSaved={upsertRecord} />}
-        {tab === 'records' && (
-          <RecordsView records={records} session={session} readonly={readonly} onChanged={() => void loadRecords()} />
+        {visited.has('cast') && (
+          <div className="tab-pane" hidden={tab !== 'cast'}>
+            <CastView session={session} onSaved={upsertRecord} onOpenHexagram={openInLibrary} />
+          </div>
         )}
-        {tab === 'library' && <LibraryView session={session} />}
-        {tab === 'offline' && <OfflineView session={session} onSaved={upsertRecord} />}
-        {tab === 'about' && <AboutView session={session} onSessionChanged={() => void loadSession()} />}
+        {visited.has('records') && (
+          <div className="tab-pane" hidden={tab !== 'records'}>
+            <RecordsView
+              records={records}
+              session={session}
+              readonly={readonly}
+              onChanged={() => void loadRecords()}
+              onOpenHexagram={openInLibrary}
+            />
+          </div>
+        )}
+        {visited.has('library') && (
+          <div className="tab-pane" hidden={tab !== 'library'}>
+            <LibraryView session={session} focusNumber={libraryFocus} onFocusConsumed={() => setLibraryFocus(null)} />
+          </div>
+        )}
+        {visited.has('offline') && (
+          <div className="tab-pane" hidden={tab !== 'offline'}>
+            <OfflineView session={session} onSaved={upsertRecord} onOpenHexagram={openInLibrary} />
+          </div>
+        )}
+        {visited.has('about') && (
+          <div className="tab-pane" hidden={tab !== 'about'}>
+            <AboutView session={session} onSessionChanged={() => void loadSession()} />
+          </div>
+        )}
       </div>
 
       <footer>

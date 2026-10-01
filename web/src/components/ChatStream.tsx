@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { DialogueTurn, TokenUsage } from '../core/types.js'
 import { isRelevant, REFUSAL } from '../core/divinationTopic.js'
 import { fmtCNY, fmtTokens } from '../lib/format.js'
@@ -61,19 +63,35 @@ export default function ChatStream({
   onAsk,
   onStop,
 }: Props) {
-  const endRef = useRef<HTMLDivElement | null>(null)
+  const logRef = useRef<HTMLDivElement | null>(null)
+  const followRef = useRef(true)
+  const prevLenRef = useRef(transcript.length)
   const last = transcript[transcript.length - 1]
   const live = streaming && last?.role === 'assistant' ? last : null
 
+  // 只滚动对话区自身，绝不动页面（否则点卦库/起卦会跳到爻辞、流式时被强行拉回）。
+  // 用户上滑后暂停跟随，下次提问（轮数变化）恢复 —— 对齐桌面版 ScrollCoordinator。
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' })
+    const el = logRef.current
+    if (!el) return
+    if (transcript.length !== prevLenRef.current) {
+      prevLenRef.current = transcript.length
+      followRef.current = true
+    }
+    if (followRef.current) el.scrollTop = el.scrollHeight
   }, [transcript, live?.content.length, live?.reasoning.length])
+
+  const onLogScroll = () => {
+    const el = logRef.current
+    if (!el) return
+    followRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24
+  }
 
   const reject = question.trim().length > 0 && !isRelevant(question)
 
   return (
     <div className="chat">
-      <div className="chat-log">
+      <div className="chat-log" ref={logRef} onScroll={onLogScroll}>
         {transcript.length === 0 && (
           <p className="chat-empty">
             留空直接点「解卦」= 按本卦卦辞做默认解读；写下你的问题则结合卦象与所问之事解读。
@@ -89,7 +107,13 @@ export default function ChatStream({
               <Reasoning text={turn.reasoning} live={turn === live} />
               <div className="bubble">
                 {turn.content ? (
-                  <Prose text={turn.content} />
+                  turn === live ? (
+                    <Prose text={turn.content} />
+                  ) : (
+                    <div className="markdown">
+                      <Markdown remarkPlugins={[remarkGfm]}>{turn.content}</Markdown>
+                    </div>
+                  )
                 ) : turn === live ? (
                   <span className="typing">正在解读…</span>
                 ) : (
@@ -101,7 +125,6 @@ export default function ChatStream({
         )}
 
         {error && <p className="chat-error">{error}</p>}
-        <div ref={endRef} />
       </div>
 
       {usage && !streaming && (

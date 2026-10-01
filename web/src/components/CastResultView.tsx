@@ -15,10 +15,13 @@ const POSITION = ['初', '二', '三', '四', '五', '上']
 export default function CastResultView({
   result,
   lines,
+  onOpen,
   children,
 }: {
   result: CastResult
   lines?: LineType[]
+  /** 点击本/互/变卦 → 在卦库打开对应卦（可选） */
+  onOpen?: (kingWenNumber: number) => void
   children?: ReactNode
 }) {
   const shown = lines ?? result.originalLines
@@ -32,7 +35,13 @@ export default function CastResultView({
     <div className="result">
       <p className="result-method">{methodLabel(result.method)}</p>
 
-      <HexagramTrio original={result.original} changed={result.changed} mutual={result.mutual} lines={shown} />
+      <HexagramTrio
+        original={result.original}
+        changed={result.changed}
+        mutual={result.mutual}
+        lines={shown}
+        onOpen={onOpen}
+      />
 
       <section className="card">
         <h3>卦辞</h3>

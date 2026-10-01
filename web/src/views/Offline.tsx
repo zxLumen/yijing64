@@ -20,12 +20,16 @@ import { newId, saveRecord, type SessionInfo } from '../lib/api.js'
 
 const ALL_YOUNG_YANG: LineType[] = Array.from({ length: 6 }, () => YOUNG_YANG)
 
-type Props = { session: SessionInfo; onSaved: (record: CastRecord) => void }
+type Props = {
+  session: SessionInfo
+  onSaved: (record: CastRecord) => void
+  onOpenHexagram?: (kingWenNumber: number) => void
+}
 
 /**
  * 线下排卦：当面/事后手动录入卦象 —— 逐爻点击切换（可设动爻），实时得出本卦 / 变卦，存入记录。
  */
-export default function OfflineView({ session, onSaved }: Props) {
+export default function OfflineView({ session, onSaved, onOpenHexagram }: Props) {
   const [allowMoving, setAllowMoving] = useState(false)
   const [lines, setLines] = useState<LineType[]>(ALL_YOUNG_YANG)
   const [note, setNote] = useState('')
@@ -156,7 +160,7 @@ export default function OfflineView({ session, onSaved }: Props) {
         </label>
       </section>
 
-      <CastResultView result={result}>
+      <CastResultView result={result} onOpen={onOpenHexagram}>
         <section className="card">
           <h3>AI 解卦</h3>
           <ChatStream

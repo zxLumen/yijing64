@@ -26,9 +26,10 @@ const newRecord = (result: CastResult): CastRecord => ({
 type Props = {
   session: SessionInfo
   onSaved: (record: CastRecord) => void
+  onOpenHexagram?: (kingWenNumber: number) => void
 }
 
-export default function CastView({ session, onSaved }: Props) {
+export default function CastView({ session, onSaved, onOpenHexagram }: Props) {
   const [method, setMethod] = useState<CastMethod>('threeCoins')
   const [result, setResult] = useState<CastResult | null>(null)
   const [numberA, setNumberA] = useState('')
@@ -187,7 +188,7 @@ export default function CastView({ session, onSaved }: Props) {
       )}
 
       {result && ready && (
-        <CastResultView result={result} lines={reveal.lines ?? result.originalLines}>
+        <CastResultView result={result} lines={reveal.lines ?? result.originalLines} onOpen={onOpenHexagram}>
           <section className="card">
             <h3>AI 解卦</h3>
             <ChatStream

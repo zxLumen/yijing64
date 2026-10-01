@@ -140,22 +140,26 @@ header {
   flex: 1;
 }
 
+.tab-pane[hidden] {
+  display: none;
+}
+
 .view {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 14px;
+  padding: 16px;
   box-shadow: var(--shadow);
 }
 
 .card h3 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-size: 14px;
   color: var(--accent);
   letter-spacing: 0.5px;
@@ -346,11 +350,13 @@ button:focus-visible {
 }
 
 /* ---- 卦象 ---- */
+/* --hex-scale 控制整体缩放：三联（本/互/变）缩小为 2/3，其余位置保持 1。 */
 .hexagram {
+  --hex-scale: 1;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: calc(12px * var(--hex-scale, 1));
   box-shadow: var(--shadow);
 }
 
@@ -358,64 +364,60 @@ button:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 10px;
+  gap: calc(10px * var(--hex-scale, 1));
   flex-wrap: wrap;
 }
 
 .hexagram-name {
-  font-size: 20px;
+  font-size: calc(20px * var(--hex-scale, 1));
   letter-spacing: 2px;
 }
 
 .hexagram-full {
-  font-size: 12px;
+  font-size: max(10px, calc(12px * var(--hex-scale, 1)));
   color: var(--ink-soft);
   margin-left: 8px;
 }
 
 .hexagram-meta {
   display: flex;
-  gap: 10px;
-  font-size: 11px;
+  gap: calc(10px * var(--hex-scale, 1));
+  font-size: max(9px, calc(11px * var(--hex-scale, 1)));
   color: var(--ink-soft);
   flex-wrap: wrap;
 }
 
 .hexagram-lines {
-  margin-top: 10px;
+  margin-top: calc(10px * var(--hex-scale, 1));
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: calc(8px * var(--hex-scale, 1));
 }
 
 .line-row {
   display: grid;
-  grid-template-columns: 34px 1fr 56px;
+  grid-template-columns: calc(34px * var(--hex-scale, 1)) 1fr calc(56px * var(--hex-scale, 1));
   align-items: center;
-  gap: 8px;
+  gap: calc(8px * var(--hex-scale, 1));
 }
 
 .line-label {
-  font-size: 12px;
+  font-size: max(10px, calc(12px * var(--hex-scale, 1)));
   color: var(--ink-soft);
   text-align: right;
 }
 
 .line-type {
-  font-size: 11px;
+  font-size: max(9px, calc(11px * var(--hex-scale, 1)));
   color: var(--ink-soft);
 }
 
 /* 爻线：固定宽度（--glyph-w）居中；阳一横、阴两断；动爻强调色 + 圆点徽标 */
 .hex-line {
-  --glyph-w: 96px;
+  --glyph-w: calc(96px * var(--hex-scale, 1));
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-.hex-line[data-variant='compact'] {
-  --glyph-w: 64px;
+  gap: calc(8px * var(--hex-scale, 1));
 }
 
 .hex-line-bars {
@@ -427,8 +429,8 @@ button:focus-visible {
 
 .hex-line-bars i {
   flex: 1;
-  height: 9px;
-  border-radius: 3px;
+  height: calc(9px * var(--hex-scale, 1));
+  border-radius: calc(3px * var(--hex-scale, 1));
   background: var(--ink);
 }
 
@@ -440,49 +442,62 @@ button:focus-visible {
   flex: none;
   display: grid;
   place-items: center;
-  width: 14px;
-  height: 14px;
+  width: calc(14px * var(--hex-scale, 1));
+  height: calc(14px * var(--hex-scale, 1));
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
-  font-size: 9px;
+  font-size: max(7px, calc(9px * var(--hex-scale, 1)));
   font-style: normal;
   font-weight: 700;
   line-height: 1;
 }
 
-/* 三联卦用的紧凑卦象：隐藏爻名 / 爻型，仅留爻线 */
-.hexagram[data-compact] {
-  padding: 10px;
-}
-
-.hexagram[data-compact] .hexagram-name {
-  font-size: 16px;
-}
-
-.hexagram[data-compact] .hexagram-lines {
-  gap: 5px;
-  margin-top: 8px;
-}
-
-.hexagram[data-compact] .line-row {
-  grid-template-columns: 1fr;
-  justify-items: center;
-}
-
-.hexagram[data-compact] .line-label,
-.hexagram[data-compact] .line-type {
-  display: none;
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .hexagram-trio {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* 本 / 互 / 变 同尺寸、同高度：三张卦象卡等高，整体缩放为 2/3 */
+.hexagram-trio > .trio-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.hexagram-trio > .trio-cell > .hexagram {
+  flex: 1;
+  --hex-scale: 0.67;
+}
+
+/* 可点击跳卦库：悬停高亮 + 键盘可达 */
+.hexagram-trio > .trio-cell[data-clickable] {
+  cursor: pointer;
+}
+
+.hexagram-trio > .trio-cell[data-clickable] > .hexagram {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hexagram-trio > .trio-cell[data-clickable]:hover > .hexagram {
+  border-color: var(--accent);
+}
+
+.hexagram-trio > .trio-cell[data-clickable]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius);
 }
 
 .trio-tag {
-  display: inline-block;
+  align-self: flex-start;
   font-size: 11px;
   padding: 1px 8px;
   margin-bottom: 4px;
@@ -592,6 +607,7 @@ button:focus-visible {
 .judgement {
   font-size: 15px;
   letter-spacing: 1px;
+  line-height: 1.8;
 }
 
 .extra {
@@ -602,6 +618,7 @@ button:focus-visible {
 .plain {
   font-size: 13px;
   color: var(--ink-soft);
+  line-height: 1.7;
 }
 
 .line-texts {
@@ -610,16 +627,17 @@ button:focus-visible {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .line-texts li {
   display: grid;
   grid-template-columns: 58px 1fr;
   gap: 4px 8px;
-  padding: 4px 0;
+  padding: 6px 0;
   border-top: 1px dashed var(--line);
   font-size: 13px;
+  line-height: 1.7;
 }
 
 .line-texts li:first-child {
@@ -655,7 +673,7 @@ button:focus-visible {
 .facts {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
 }
 
@@ -876,6 +894,119 @@ button:focus-visible {
 
 .bubble p:last-child {
   margin-bottom: 0;
+}
+
+.markdown {
+  white-space: normal;
+  line-height: 1.7;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 16px 0 8px;
+  line-height: 1.35;
+}
+
+.markdown h1 {
+  font-size: 1.4em;
+}
+
+.markdown h2 {
+  font-size: 1.25em;
+}
+
+.markdown h3 {
+  font-size: 1.1em;
+}
+
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  font-size: 1em;
+}
+
+.markdown p {
+  margin: 0 0 10px;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 0 0 10px;
+  padding-left: 1.4em;
+}
+
+.markdown li {
+  margin: 2px 0;
+}
+
+.markdown li > p {
+  margin: 0;
+}
+
+.markdown blockquote {
+  margin: 0 0 10px;
+  padding: 2px 0 2px 10px;
+  border-left: 3px solid var(--line);
+  color: var(--ink-soft);
+}
+
+.markdown code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+}
+
+.markdown pre {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  overflow-x: auto;
+}
+
+.markdown pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85em;
+}
+
+.markdown a {
+  color: var(--accent);
+}
+
+.markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.markdown th,
+.markdown td {
+  border: 1px solid var(--line);
+  padding: 5px 8px;
+  text-align: left;
+}
+
+.markdown th {
+  background: var(--bg);
+}
+
+.markdown hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 12px 0;
 }
 
 .typing {

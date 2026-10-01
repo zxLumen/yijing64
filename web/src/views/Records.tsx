@@ -13,11 +13,12 @@ type Props = {
   session: SessionInfo
   readonly: boolean
   onChanged: () => void
+  onOpenHexagram?: (kingWenNumber: number) => void
 }
 
 const rebuild = (record: CastRecord): CastResult => castResult(record.method, record.originalLines)
 
-export default function RecordsView({ records, session, readonly, onChanged }: Props) {
+export default function RecordsView({ records, session, readonly, onChanged, onOpenHexagram }: Props) {
   const [openId, setOpenId] = useState<string | null>(null)
   const [error, setError] = useState('')
   const chat = useInterpretation(() => onChanged())
@@ -77,7 +78,7 @@ export default function RecordsView({ records, session, readonly, onChanged }: P
           </button>
           <span className="hint">{fmtDate(open.date)}</span>
         </div>
-        <CastResultView result={result} lines={open.originalLines}>
+        <CastResultView result={result} lines={open.originalLines} onOpen={onOpenHexagram}>
           <section className="card">
             <h3>AI 解卦</h3>
             <ChatStream
