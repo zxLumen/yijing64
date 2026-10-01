@@ -15,6 +15,7 @@ import { lineTitle } from '../core/hexagram.js'
 import { LineGlyph } from '../components/HexagramLine.js'
 import CastResultView from '../components/CastResultView.js'
 import ChatStream from '../components/ChatStream.js'
+import { useSessionState } from '../lib/sessionState.js'
 import { useInterpretation } from '../lib/useInterpretation.js'
 import { newId, saveRecord, type SessionInfo } from '../lib/api.js'
 
@@ -30,12 +31,13 @@ type Props = {
  * 线下排卦：当面/事后手动录入卦象 —— 逐爻点击切换（可设动爻），实时得出本卦 / 变卦，存入记录。
  */
 export default function OfflineView({ session, onSaved, onOpenHexagram }: Props) {
-  const [allowMoving, setAllowMoving] = useState(false)
-  const [lines, setLines] = useState<LineType[]>(ALL_YOUNG_YANG)
-  const [note, setNote] = useState('')
+  const [allowMoving, setAllowMoving] = useSessionState('offline.allowMoving', false)
+  const [lines, setLines] = useSessionState<LineType[]>('offline.lines', ALL_YOUNG_YANG)
+  const [note, setNote] = useSessionState('offline.note', '')
   const [error, setError] = useState('')
-  const [savedId, setSavedId] = useState<string | null>(null)
-  const chat = useInterpretation(onSaved)
+  const [savedId, setSavedId] = useSessionState<string | null>('offline.savedId', null)
+  const [baseId, setBaseId] = useSessionState<string>('offline.baseId', () => newId())
+  const chat = useInterpretation(onSaved, 'chat.offline')
 
   const result: CastResult = useMemo(() => castResult('manual', lines), [lines])
   const movingCount = lines.filter(isMoving).length
@@ -43,6 +45,7 @@ export default function OfflineView({ session, onSaved, onOpenHexagram }: Props)
   /** 改爻后旧记录即失效；清空已保存标记与进行中的解读。 */
   const setLinesAndReset = (next: LineType[]) => {
     setLines(next)
+    setBaseId(newId())
     setSavedId(null)
     chat.load(null)
   }
@@ -70,7 +73,7 @@ export default function OfflineView({ session, onSaved, onOpenHexagram }: Props)
   // 卦象与 id 只随六爻变化生成一次；备注改动不影响 id
   const base: CastRecord = useMemo(
     () => ({
-      id: newId(),
+      id: baseId,
       date: new Date().toISOString(),
       method: 'manual',
       originalLines: result.originalLines,
@@ -81,7 +84,7 @@ export default function OfflineView({ session, onSaved, onOpenHexagram }: Props)
       model: session.model,
       provider: session.provider,
     }),
-    [result, session.model, session.provider],
+    [baseId, result, session.model, session.provider],
   )
   const record: CastRecord = useMemo(() => ({ ...base, question: note.trim() }), [base, note])
   const saved = savedId === base.id

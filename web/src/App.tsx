@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSessionState } from './lib/sessionState.js'
 import CastView from './views/Cast.js'
 import LibraryView from './views/Library.js'
 import RecordsView from './views/Records.js'
@@ -18,19 +19,24 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id']
 
 export default function App() {
-  const [tab, setTab] = useState<TabId>('cast')
+  const [storedTab, setTab] = useSessionState<TabId>('tab', 'cast')
+  const tab: TabId = TABS.some((t) => t.id === storedTab) ? storedTab : 'cast'
   /** 首次访问过的 Tab 保持挂载（仅隐藏），切走再回来不丢临时状态 */
-  const [visited, setVisited] = useState<Set<TabId>>(() => new Set<TabId>(['cast']))
+  const [visitedArr, setVisitedArr] = useSessionState<TabId[]>('visited', ['cast'])
+  const visited = useMemo(() => new Set(visitedArr.filter((id) => TABS.some((t) => t.id === id))), [visitedArr])
   const [session, setSession] = useState<SessionInfo | null>(null)
   const [records, setRecords] = useState<CastRecord[]>([])
   const [error, setError] = useState('')
   /** 从起卦/排卦/记录的「本·互·变」跳到卦库时要打开的第几卦 */
   const [libraryFocus, setLibraryFocus] = useState<number | null>(null)
 
-  const selectTab = useCallback((id: TabId) => {
-    setVisited((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
-    setTab(id)
-  }, [])
+  const selectTab = useCallback(
+    (id: TabId) => {
+      setVisitedArr((prev) => (prev.includes(id) ? prev : [...prev, id]))
+      setTab(id)
+    },
+    [setVisitedArr, setTab],
+  )
 
   /** 在卦库打开指定卦（供三联点击调用） */
   const openInLibrary = useCallback(

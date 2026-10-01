@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CastRecord, CastResult } from '../core/types.js'
 import { castResult, movingLines } from '../core/castResult.js'
 import { label as methodLabel } from '../core/castMethod.js'
 import CastResultView from '../components/CastResultView.js'
 import ChatStream from '../components/ChatStream.js'
+import { useSessionState } from '../lib/sessionState.js'
 import { useInterpretation } from '../lib/useInterpretation.js'
 import { fmtCNY, fmtDate, fmtTokens, summarizeUsage } from '../lib/format.js'
 import { clearRecords, deleteRecord, type SessionInfo } from '../lib/api.js'
@@ -19,11 +20,17 @@ type Props = {
 const rebuild = (record: CastRecord): CastResult => castResult(record.method, record.originalLines)
 
 export default function RecordsView({ records, session, readonly, onChanged, onOpenHexagram }: Props) {
-  const [openId, setOpenId] = useState<string | null>(null)
+  const [openId, setOpenId] = useSessionState<string | null>('records.openId', null)
   const [error, setError] = useState('')
-  const chat = useInterpretation(() => onChanged())
+  const chat = useInterpretation(() => onChanged(), 'chat.records')
 
   const open = records.find((r) => r.id === openId) ?? null
+
+  // 刷新后若上次停在某条记录详情，把该记录的对话载回（站内点击也由这里统一载入）
+  useEffect(() => {
+    if (open) chat.load(open)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open?.id])
   const usage = summarizeUsage(records)
   const aiDisabled = !session.hasAi || readonly
   const aiHint = readonly
@@ -37,7 +44,6 @@ export default function RecordsView({ records, session, readonly, onChanged, onO
   const openDetail = (record: CastRecord) => {
     setOpenId(record.id)
     setError('')
-    chat.load(record)
   }
 
   const closeDetail = () => {

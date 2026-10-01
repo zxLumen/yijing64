@@ -7,6 +7,7 @@ import { pillarsOf, timeCastInputs } from '../core/lunar.js'
 import CastResultView from '../components/CastResultView.js'
 import CoinToss, { useLineReveal } from '../components/CoinToss.js'
 import ChatStream from '../components/ChatStream.js'
+import { useSessionState } from '../lib/sessionState.js'
 import { useInterpretation } from '../lib/useInterpretation.js'
 import { newId, saveRecord, type SessionInfo } from '../lib/api.js'
 
@@ -30,14 +31,14 @@ type Props = {
 }
 
 export default function CastView({ session, onSaved, onOpenHexagram }: Props) {
-  const [method, setMethod] = useState<CastMethod>('threeCoins')
-  const [result, setResult] = useState<CastResult | null>(null)
-  const [numberA, setNumberA] = useState('')
-  const [numberB, setNumberB] = useState('')
+  const [method, setMethod] = useSessionState<CastMethod>('cast.method', 'threeCoins')
+  const [result, setResult] = useSessionState<CastResult | null>('cast.result', null)
+  const [numberA, setNumberA] = useSessionState('cast.numberA', '')
+  const [numberB, setNumberB] = useSessionState('cast.numberB', '')
   const [error, setError] = useState('')
-  const [savedId, setSavedId] = useState<string | null>(null)
+  const [savedId, setSavedId] = useSessionState<string | null>('cast.savedId', null)
   const reveal = useLineReveal()
-  const chat = useInterpretation(onSaved)
+  const chat = useInterpretation(onSaved, 'chat.cast')
 
   const inputs = useMemo(() => (method === 'plumTime' ? timeCastInputs(new Date()) : null), [method])
   const pillars = useMemo(() => (method === 'plumTime' ? pillarsOf(new Date()) : null), [method])

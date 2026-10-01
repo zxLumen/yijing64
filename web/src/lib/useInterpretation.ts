@@ -4,6 +4,7 @@ import { buildConversation, isDefaultReading } from '../core/hexagramInterpretat
 import { newTurn, interpret, saveRecord } from './api.js'
 import { mergeUsage } from '../core/pricing.js'
 import { reportAiState } from './aiStatus.js'
+import { readState, useDebouncedSessionState } from './sessionState.js'
 
 export type Interpretation = {
   transcript: DialogueTurn[]
@@ -19,17 +20,26 @@ export type Interpretation = {
   stop: () => void
 }
 
+type PersistedChat = { transcript: DialogueTurn[]; usage: TokenUsage | null; question: string }
+const EMPTY_CHAT: PersistedChat = { transcript: [], usage: null, question: '' }
+
 /**
  * 解卦会话状态：流式增量直接写进 transcript 最后一条助手消息，
  * 结束后把整条记录存回服务端（按数据域隔离）。
+ *
+ * `persistKey` 给出时，会话（对话 / 用量 / 输入框）随 sessionStorage 保存，
+ * 整页刷新后自动恢复（约定见博客仓库 docs/APP-EMBED.md）。
  */
-export function useInterpretation(onSaved?: (record: CastRecord) => void): Interpretation {
-  const [transcript, setTranscript] = useState<DialogueTurn[]>([])
-  const [usage, setUsage] = useState<TokenUsage | null>(null)
-  const [question, setQuestion] = useState('')
+export function useInterpretation(onSaved?: (record: CastRecord) => void, persistKey?: string): Interpretation {
+  const restored = persistKey ? readState<PersistedChat>(persistKey, EMPTY_CHAT) : EMPTY_CHAT
+  const [transcript, setTranscript] = useState<DialogueTurn[]>(restored.transcript)
+  const [usage, setUsage] = useState<TokenUsage | null>(restored.usage)
+  const [question, setQuestion] = useState(restored.question)
   const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState('')
   const abortRef = useRef<AbortController | null>(null)
+
+  useDebouncedSessionState(persistKey ?? '', { transcript, usage, question })
 
   const load = useCallback((record?: CastRecord | null) => {
     if (abortRef.current) reportAiState('idle', '已切换')

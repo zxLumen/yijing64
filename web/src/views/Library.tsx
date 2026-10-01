@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { CastRecord, CastResult } from '../core/types.js'
 import { ALL, contentByNumber, findByNumber } from '../core/hexagramData.js'
 import { staticLines } from '../core/lineType.js'
@@ -10,6 +10,7 @@ import { fromHexagram } from '../core/castResult.js'
 import HexagramBoard from '../components/HexagramBoard.js'
 import { MiniHexagram } from '../components/HexagramLine.js'
 import ChatStream from '../components/ChatStream.js'
+import { useSessionState } from '../lib/sessionState.js'
 import { useInterpretation } from '../lib/useInterpretation.js'
 import { newId, type SessionInfo } from '../lib/api.js'
 
@@ -21,9 +22,9 @@ type Props = {
 }
 
 export default function LibraryView({ session, focusNumber, onFocusConsumed }: Props) {
-  const [query, setQuery] = useState('')
-  const [number, setNumber] = useState<number | null>(null)
-  const chat = useInterpretation()
+  const [query, setQuery] = useSessionState('library.query', '')
+  const [number, setNumber] = useSessionState<number | null>('library.number', null)
+  const chat = useInterpretation(undefined, 'chat.library')
 
   useEffect(() => {
     if (focusNumber == null) return
