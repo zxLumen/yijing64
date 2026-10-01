@@ -1,30 +1,17 @@
 import type { Hexagram, LineType } from '../core/types.js'
-import { isYang, name as lineTypeName } from '../core/lineType.js'
+import { isYang, name as lineTypeName, staticLines, LINE_POSITIONS } from '../core/lineType.js'
 import { lineTitle } from '../core/hexagram.js'
 import { upper, lower } from '../core/hexagram.js'
 import { symbol, name as trigramName } from '../core/trigram.js'
 import { palaceRankLabel } from '../core/hexagramData.js'
+import { LineGlyph } from './HexagramLine.js'
 
-const LINE_POSITIONS = ['初', '二', '三', '四', '五', '上']
-
-/** 单根爻：阳爻一横、阴爻两断；老阴/老阳带 ✕ / ○ 标记。 */
+/** 单根爻：爻名 + 爻线 + 爻型。 */
 function Line({ line, label }: { line: LineType; label: string }) {
-  const yang = isYang(line)
-  const moving = line === 6 || line === 9
   return (
     <div className="line-row">
       <span className="line-label">{label}</span>
-      <span className="line-glyph" data-moving={moving || undefined}>
-        {yang ? (
-          <i className="yang" />
-        ) : (
-          <>
-            <i className="yin" />
-            <i className="yin" />
-          </>
-        )}
-        <em>{line === 9 ? '○' : line === 6 ? '✕' : ''}</em>
-      </span>
+      <LineGlyph line={line} />
       <span className="line-type">{lineTypeName(line)}</span>
     </div>
   )
@@ -43,7 +30,7 @@ type Props = {
  * 卦象图：卦名 + 上下卦 + 六爻。上爻在上（与纸质卦辞同序）。
  */
 export default function HexagramBoard({ hexagram, lines, full = true, compact = false }: Props) {
-  const shown = lines ?? Array.from({ length: 6 }, () => 7 as LineType)
+  const shown = lines ?? staticLines(hexagram)
   const order = [5, 4, 3, 2, 1, 0]
 
   return (

@@ -141,3 +141,30 @@ test('线下排卦的爻行：自上而下展示，爻位名与下标严格对�
   assert.equal(shown['初'], YOUNG_YIN)
   assert.equal(shown['上'], YOUNG_YANG)
 })
+
+test('线下排卦：四态循环闭合、关动爻降级、静态推爻、默认全少阳为乾', async () => {
+  const { nextLineType, downgradeLine, staticLines, YOUNG_YIN, YOUNG_YANG, OLD_YIN, OLD_YANG } = await import(
+    '../src/core/lineType.js'
+  )
+  const { findByNumber } = await import('../src/core/hexagramData.js')
+
+  // 四态循环：少阴 → 少阳 → 老阴 → 老阳 → 少阴
+  assert.equal(nextLineType(YOUNG_YIN), YOUNG_YANG)
+  assert.equal(nextLineType(YOUNG_YANG), OLD_YIN)
+  assert.equal(nextLineType(OLD_YIN), OLD_YANG)
+  assert.equal(nextLineType(OLD_YANG), YOUNG_YIN)
+
+  // 关闭「可设动爻」时把动爻降级为同阴阳静爻
+  assert.equal(downgradeLine(OLD_YANG), YOUNG_YANG)
+  assert.equal(downgradeLine(OLD_YIN), YOUNG_YIN)
+  assert.equal(downgradeLine(YOUNG_YANG), YOUNG_YANG)
+  assert.equal(downgradeLine(YOUNG_YIN), YOUNG_YIN)
+
+  // 静态卦象推爻：乾（第 1 卦）全阳
+  assert.deepEqual(staticLines(findByNumber(1)), [7, 7, 7, 7, 7, 7])
+
+  // 默认全少阳的线下排卦 = 乾为天，无动爻
+  const result = castResult('manual', [7, 7, 7, 7, 7, 7])
+  assert.equal(result.original.kingWenNumber, 1)
+  assert.equal(result.changed.kingWenNumber, 1)
+})

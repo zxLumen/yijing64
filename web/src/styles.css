@@ -308,6 +308,43 @@ button:focus-visible {
   flex-wrap: wrap;
 }
 
+.idle-hint {
+  margin: 0;
+  padding: 18px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  background: var(--panel);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+.casting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 14px;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ---- 卦象 ---- */
 .hexagram {
   background: var(--panel);
@@ -348,7 +385,7 @@ button:focus-visible {
   margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .line-row {
@@ -364,39 +401,78 @@ button:focus-visible {
   text-align: right;
 }
 
-.line-glyph {
-  position: relative;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
-
-.line-glyph i {
-  display: block;
-  height: 7px;
-  border-radius: 2px;
-  background: var(--ink);
-}
-
-.line-glyph i.yang {
-  flex: 1;
-}
-
-.line-glyph[data-moving] i {
-  background: var(--accent);
-}
-
-.line-glyph em {
-  position: absolute;
-  right: -14px;
-  font-style: normal;
-  font-size: 12px;
-  color: var(--accent);
-}
-
 .line-type {
   font-size: 11px;
   color: var(--ink-soft);
+}
+
+/* 爻线：固定宽度（--glyph-w）居中；阳一横、阴两断；动爻强调色 + 圆点徽标 */
+.hex-line {
+  --glyph-w: 96px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hex-line[data-variant='compact'] {
+  --glyph-w: 64px;
+}
+
+.hex-line-bars {
+  display: flex;
+  gap: calc(var(--glyph-w) * 0.16);
+  width: var(--glyph-w);
+  flex: none;
+}
+
+.hex-line-bars i {
+  flex: 1;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--ink);
+}
+
+.hex-line[data-moving] .hex-line-bars i {
+  background: var(--accent);
+}
+
+.hex-line-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 三联卦用的紧凑卦象：隐藏爻名 / 爻型，仅留爻线 */
+.hexagram[data-compact] {
+  padding: 10px;
+}
+
+.hexagram[data-compact] .hexagram-name {
+  font-size: 16px;
+}
+
+.hexagram[data-compact] .hexagram-lines {
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.hexagram[data-compact] .line-row {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.hexagram[data-compact] .line-label,
+.hexagram[data-compact] .line-type {
+  display: none;
 }
 
 .hexagram-trio {
@@ -597,7 +673,7 @@ button:focus-visible {
 /* ---- 卦库 ---- */
 .hexagram-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
   gap: 6px;
   margin-top: 8px;
   max-height: 46vh;
@@ -607,23 +683,33 @@ button:focus-visible {
 .hexagram-grid button {
   position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 7px 8px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
   text-align: left;
   border-radius: 8px;
 }
 
-.hexagram-grid button b {
+.hexagram-grid .grid-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.hexagram-grid .grid-text b {
   font-size: 14px;
 }
 
-.hexagram-grid button span {
+.hexagram-grid .grid-text > span {
   font-size: 10px;
   color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.hexagram-grid button i {
+.hexagram-grid button > i {
   position: absolute;
   top: 5px;
   right: 7px;
@@ -637,38 +723,108 @@ button:focus-visible {
   border-color: var(--accent);
 }
 
-/* ---- 线下排卦 ---- */
-.toggle-lines {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 6px;
-}
-
-.toggle-lines button {
+/* 迷你六爻图（卦库网格） */
+.mini-hexagram {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 8px;
+  gap: 3px;
+  flex: none;
 }
 
-.toggle-lines button span {
-  font-size: 11px;
+.mini-line {
+  display: flex;
+  gap: 3px;
+  width: 30px;
+}
+
+.mini-line i {
+  flex: 1;
+  height: 4px;
+  border-radius: 1px;
+  background: var(--ink);
+}
+
+/* ---- 线下排卦 ---- */
+.allow-moving {
+  margin-top: 8px;
+}
+
+.line-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0 4px;
+  font-size: 12px;
   color: var(--ink-soft);
 }
 
-.toggle-lines button i {
-  font-size: 11px;
-  font-style: normal;
-  color: var(--ink-soft);
+.line-legend b {
+  font-weight: 700;
+  color: var(--ink);
 }
 
-.toggle-lines button[data-on] {
-  background: var(--accent-soft);
+.line-legend b[data-mark] {
+  color: var(--accent);
+}
+
+.line-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.line-editor-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 48px 20px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.line-editor-row:hover {
   border-color: var(--accent);
 }
 
-.toggle-lines button[data-on] i {
+.line-editor-row[data-moving] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.line-editor-row .line-label {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.line-editor-row .line-type {
+  color: var(--ink-soft);
+}
+
+.line-editor-row[data-moving] .line-type {
   color: var(--accent);
+}
+
+.line-editor-row .chevron {
+  font-style: normal;
+  font-size: 12px;
+  line-height: 0.8;
+  color: var(--ink-soft);
+}
+
+.line-editor-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.line-editor-foot .hint {
+  margin: 0;
 }
 
 /* ---- 对话 ---- */

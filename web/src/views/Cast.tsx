@@ -173,12 +173,17 @@ export default function CastView({ session, onSaved }: Props) {
         {error && <p className="chat-error">{error}</p>}
       </section>
 
+      {!result && !reveal.lines && <p className="idle-hint">✦ 选定方式后点「起卦」</p>}
+
       {method === 'threeCoins' && reveal.lines && (
         <CoinToss lines={reveal.lines} revealed={reveal.revealed} revealing={reveal.revealing} onSkip={reveal.skip} />
       )}
 
       {result && !ready && (
-        <p className="hint center">六爻已定，待揭示完成后显示卦象…</p>
+        <p className="casting">
+          <span className="spinner" aria-hidden="true" />
+          起卦中…
+        </p>
       )}
 
       {result && ready && (

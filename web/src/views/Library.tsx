@@ -1,19 +1,17 @@
 import { useMemo, useState } from 'react'
-import type { CastRecord, CastResult, Hexagram, LineType } from '../core/types.js'
+import type { CastRecord, CastResult } from '../core/types.js'
 import { ALL, contentByNumber, findByNumber } from '../core/hexagramData.js'
+import { staticLines } from '../core/lineType.js'
 import { mutual, opposite, inverse, upper, lower, lineTitle } from '../core/hexagram.js'
 import { palaceRankLabel } from '../core/hexagramData.js'
 import { search } from '../core/hexagramSearch.js'
 import { symbol, name as trigramName } from '../core/trigram.js'
 import { fromHexagram } from '../core/castResult.js'
 import HexagramBoard from '../components/HexagramBoard.js'
+import { MiniHexagram } from '../components/HexagramLine.js'
 import ChatStream from '../components/ChatStream.js'
 import { useInterpretation } from '../lib/useInterpretation.js'
 import { newId, type SessionInfo } from '../lib/api.js'
-
-/** 由静态卦象推出六爻（无动爻）。 */
-const staticLines = (hexagram: Hexagram): LineType[] =>
-  Array.from({ length: 6 }, (_, i) => (((hexagram.lines >> i) & 1) === 1 ? 7 : 8) as LineType)
 
 type Props = { session: SessionInfo }
 
@@ -75,8 +73,11 @@ export default function LibraryView({ session }: Props) {
               className={item.kingWenNumber === number ? 'active' : ''}
               onClick={() => pick(item.kingWenNumber)}
             >
-              <b>{item.name}</b>
-              <span>{item.fullName}</span>
+              <MiniHexagram lines={staticLines(item)} />
+              <span className="grid-text">
+                <b>{item.name}</b>
+                <span>{item.fullName}</span>
+              </span>
               <i>{item.kingWenNumber}</i>
             </button>
           ))}
