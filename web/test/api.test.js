@@ -195,6 +195,21 @@ test('起卦记录按数据域隔离，访客互相看不到', async () => {
   assert.deepEqual(listB.body.records.map((r) => r.id), ['b1'])
 })
 
+test('记录保留全部起卦方式（manual / 卦库等不被降级成 threeCoins）', async () => {
+  const client = makeClient()
+  await postRecord(client, { id: 'm1', method: 'manual' })
+  await postRecord(client, { id: 'm2', method: 'hexagramLibrary' })
+  await postRecord(client, { id: 'm3', method: 'plumTime' })
+  await postRecord(client, { id: 'm4', method: '三枚铜钱' })
+  const { body } = await client.json('/api/records')
+  const byId = Object.fromEntries(body.records.map((r) => [r.id, r.method]))
+  assert.equal(byId.m1, 'manual')
+  assert.equal(byId.m2, 'hexagramLibrary')
+  assert.equal(byId.m3, 'plumTime')
+  // 非法值仍收敛到默认值，避免脏数据
+  assert.equal(byId.m4, 'threeCoins')
+})
+
 test('同 id 覆盖而非追加，按时间倒序排列', async () => {
   const client = makeClient()
   await postRecord(client, { id: 'dup', date: '2026-01-01T00:00:00.000Z', question: '第一版' })

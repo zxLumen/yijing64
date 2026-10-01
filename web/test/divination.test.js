@@ -117,3 +117,27 @@ test('空白提问 = 默认解卦：只看卦象，丢弃全部历史', () => {
   assert.ok(isDefaultReading('  '))
   assert.ok(!isDefaultReading('运势'))
 })
+
+test('线下排卦的爻行：自上而下展示，爻位名与下标严格对应', async () => {
+  const { lineRows, LINE_POSITIONS, YOUNG_YANG, YOUNG_YIN } = await import('../src/core/lineType.js')
+  const { findByNumber } = await import('../src/core/hexagramData.js')
+
+  // 上爻在顶，但 label 必须跟着 idx 走（初爻 = 下标 0）
+  assert.deepEqual(lineRows(), [
+    { label: '上', idx: 5 },
+    { label: '五', idx: 4 },
+    { label: '四', idx: 3 },
+    { label: '三', idx: 2 },
+    { label: '二', idx: 1 },
+    { label: '初', idx: 0 },
+  ])
+  assert.deepEqual([...LINE_POSITIONS], ['初', '二', '三', '四', '五', '上'])
+
+  // 姤（巽下乾上）：初六为阴、上九为阳，行内取值须与卦序一致
+  const gou = findByNumber(44)
+  const lines = []
+  for (let i = 0; i < 6; i += 1) lines.push(((gou.lines >> i) & 1 ? YOUNG_YANG : YOUNG_YIN))
+  const shown = Object.fromEntries(lineRows().map(({ label, idx }) => [label, lines[idx]]))
+  assert.equal(shown['初'], YOUNG_YIN)
+  assert.equal(shown['上'], YOUNG_YANG)
+})

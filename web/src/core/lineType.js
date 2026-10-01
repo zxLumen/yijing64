@@ -36,3 +36,12 @@ export const lineSymbol = (line) => {
 }
 
 export const LINE_TYPES = /** @type {LineType[]} */ ([6, 7, 8, 9])
+
+/** 爻位名，索引与六爻数组一致（0 = 初爻，5 = 上爻）。 */
+export const LINE_POSITIONS = /** @type {const} */ (['初', '二', '三', '四', '五', '上'])
+
+/** 自上而下展示的爻行（上爻在最上），label 与 idx 严格对应，避免标错爻位。 */
+export const lineRows = () =>
+  /** @type {{label: string, idx: number}[]} */ (
+    [5, 4, 3, 2, 1, 0].map((idx) => ({ label: /** @type {string} */ (LINE_POSITIONS[idx]), idx }))
+  )

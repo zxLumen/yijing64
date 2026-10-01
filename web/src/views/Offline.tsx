@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react'
 import type { CastRecord, CastResult, Hexagram, LineType } from '../core/types.js'
 import { ALL, findByNumber } from '../core/hexagramData.js'
 import { search } from '../core/hexagramSearch.js'
-import { OLD_YANG, OLD_YIN, YOUNG_YANG, YOUNG_YIN, isYang } from '../core/lineType.js'
+import { OLD_YANG, OLD_YIN, YOUNG_YANG, YOUNG_YIN, isYang, lineRows, LINE_POSITIONS } from '../core/lineType.js'
 import { castResult, movingLines } from '../core/castResult.js'
 import CastResultView from '../components/CastResultView.js'
 import ChatStream from '../components/ChatStream.js'
 import { useInterpretation } from '../lib/useInterpretation.js'
 import { newId, saveRecord, type SessionInfo } from '../lib/api.js'
 
-const POSITION = ['初', '二', '三', '四', '五', '上']
+const POSITION = LINE_POSITIONS
 
 type Props = { session: SessionInfo; onSaved: (record: CastRecord) => void }
 
@@ -128,8 +128,7 @@ export default function OfflineView({ session, onSaved }: Props) {
         <section className="card">
           <h3>标动爻（点击切换，不动即静爻）</h3>
           <div className="toggle-lines">
-            {POSITION.map((label, i) => {
-              const idx = 5 - i
+            {lineRows().map(({ label, idx }) => {
               const yang = isYang(lines[idx])
               return (
                 <button key={idx} type="button" data-on={moving.has(idx) || undefined} onClick={() => toggle(idx)}>

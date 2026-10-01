@@ -2,6 +2,7 @@ import fsp from 'node:fs/promises'
 import path from 'node:path'
 
 import { CID_RE, OWNER_SCOPE } from './scope.js'
+import { isCastMethod } from '../src/core/castMethod.js'
 import { readJSON, withLock, writeJSON } from './store.js'
 
 /** 与原生 CastHistoryStore 一致的最多条数。 */
@@ -121,9 +122,7 @@ const countMoving = (record) => {
  * @param {any} input
  */
 const sanitizeRecord = (input) => {
-  const method = ['threeCoins', 'plumTime', 'plumNumbers', 'plumRandom'].includes(input?.method)
-    ? input.method
-    : 'threeCoins'
+  const method = isCastMethod(input?.method) ? input.method : 'threeCoins'
   const originalLines = Array.isArray(input?.originalLines)
     ? input.originalLines.slice(0, 6).map((l) => (typeof l === 'number' && l >= 6 && l <= 9 ? Math.round(l) : 7))
     : []
