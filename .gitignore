@@ -5,3 +5,11 @@ xcuserdata/
 .DS_Store
 __pycache__/
 /*.[mM][pP]4
+
+# 网页版(web/)
+web/node_modules/
+web/dist/
+# 本地运行期数据(记录 / AI 配置 / Key / owner token)—— 绝不入库
+web/data/
+web/.env
+web/.env.local

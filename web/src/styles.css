@@ -1,0 +1,933 @@
+:root {
+  --bg: #f6f5f2;
+  --panel: #fffefb;
+  --ink: #23211d;
+  --ink-soft: #6b655c;
+  --line: #ddd8cd;
+  --accent: #8a6d3b;
+  --accent-soft: #f0e8d8;
+  --danger: #a33a2a;
+  --ok: #3f6b4f;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgb(35 33 29 / 8%), 0 8px 24px rgb(35 33 29 / 4%);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171614;
+    --panel: #201e1b;
+    --ink: #ece7dd;
+    --ink-soft: #a49c8f;
+    --line: #34312c;
+    --accent: #d3b378;
+    --accent-soft: #2c271f;
+    --danger: #e08a76;
+    --ok: #7fb894;
+    --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 20%);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.65 -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 12px 14px 28px;
+  gap: 12px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.brand b {
+  font-size: 17px;
+  letter-spacing: 1px;
+}
+
+.brand span {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.badge.owner {
+  background: color-mix(in srgb, var(--ok) 18%, transparent);
+  color: var(--ok);
+}
+
+.badge.warn {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  color: var(--danger);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 6px;
+  z-index: 5;
+}
+
+.tabs button {
+  flex: 1;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabs button.active {
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.tabs button i {
+  font-style: normal;
+  font-size: 11px;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+.body {
+  flex: 1;
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.card p {
+  margin: 6px 0;
+}
+
+code {
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--accent-soft);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 6px 0;
+}
+
+.hint.center {
+  text-align: center;
+}
+
+.pillars {
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fffdf8;
+  font-weight: 600;
+}
+
+button.ghost {
+  background: transparent;
+}
+
+button.danger,
+.link.danger {
+  color: var(--danger);
+}
+
+.link {
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  color: var(--accent);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+input,
+select {
+  font: inherit;
+  width: 100%;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+input:focus,
+select:focus,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.field {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 8px 0;
+}
+
+.field input,
+.field select {
+  margin-top: 4px;
+  color: var(--ink);
+}
+
+.field-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.field-row label {
+  flex: 1;
+  min-width: 120px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.field-row input {
+  margin-top: 4px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin: 10px 0;
+}
+
+.check input {
+  width: auto;
+}
+
+.method-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.method-tabs button.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---- 卦象 ---- */
+.hexagram {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+
+.hexagram-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hexagram-name {
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.hexagram-full {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-left: 8px;
+}
+
+.hexagram-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  flex-wrap: wrap;
+}
+
+.hexagram-lines {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.line-row {
+  display: grid;
+  grid-template-columns: 34px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+}
+
+.line-label {
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.line-glyph {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.line-glyph i {
+  display: block;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--ink);
+}
+
+.line-glyph i.yang {
+  flex: 1;
+}
+
+.line-glyph[data-moving] i {
+  background: var(--accent);
+}
+
+.line-glyph em {
+  position: absolute;
+  right: -14px;
+  font-style: normal;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.line-type {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.hexagram-trio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.trio-tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 8px;
+  margin-bottom: 4px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.result-method {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* ---- 铜钱动画 ---- */
+.coin-toss {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+
+.coin-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.coin-line {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
+}
+
+.coin-line[data-shown] {
+  opacity: 1;
+}
+
+.coin-line-label {
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.coin-line-empty {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.coin-coins {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-style: normal;
+  border: 1px solid var(--line);
+  background: var(--accent-soft);
+  color: var(--accent);
+  animation: coin-in 0.42s ease;
+}
+
+.coin[data-face='front'] {
+  background: var(--bg);
+  color: var(--ink-soft);
+}
+
+@keyframes coin-in {
+  from {
+    transform: scale(0.4) rotate(-90deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coin {
+    animation: none;
+  }
+}
+
+.coin-coins b {
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.coin-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* ---- 卦辞 / 爻辞 ---- */
+.judgement {
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.extra {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.plain {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.line-texts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.line-texts li {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 4px 8px;
+  padding: 4px 0;
+  border-top: 1px dashed var(--line);
+  font-size: 13px;
+}
+
+.line-texts li:first-child {
+  border-top: 0;
+}
+
+.line-texts li[data-moving] {
+  background: var(--accent-soft);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.line-title {
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.line-changed {
+  grid-column: 2;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.tag {
+  font-size: 10px;
+  padding: 0 5px;
+  margin-left: 4px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fffdf8;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.facts div {
+  display: flex;
+  gap: 10px;
+}
+
+.facts span {
+  flex: 0 0 64px;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+/* ---- 卦库 ---- */
+.hexagram-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+  max-height: 46vh;
+  overflow: auto;
+}
+
+.hexagram-grid button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 8px;
+  text-align: left;
+  border-radius: 8px;
+}
+
+.hexagram-grid button b {
+  font-size: 14px;
+}
+
+.hexagram-grid button span {
+  font-size: 10px;
+  color: var(--ink-soft);
+}
+
+.hexagram-grid button i {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  font-size: 10px;
+  font-style: normal;
+  color: var(--ink-soft);
+}
+
+.hexagram-grid button.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* ---- 线下排卦 ---- */
+.toggle-lines {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px;
+}
+
+.toggle-lines button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+}
+
+.toggle-lines button span {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.toggle-lines button i {
+  font-size: 11px;
+  font-style: normal;
+  color: var(--ink-soft);
+}
+
+.toggle-lines button[data-on] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.toggle-lines button[data-on] i {
+  color: var(--accent);
+}
+
+/* ---- 对话 ---- */
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-log {
+  max-height: 52vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.chat-empty {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.chat-turn.user {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: 88%;
+  padding: 8px 11px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-turn.user .bubble {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.bubble p {
+  margin: 0 0 8px;
+}
+
+.bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.typing {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.typing::after {
+  content: '…';
+  animation: blink 1.2s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing::after {
+    animation: none;
+  }
+}
+
+.reasoning {
+  margin-bottom: 4px;
+}
+
+.reasoning-body {
+  font-size: 12px;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--line);
+  padding: 2px 0 2px 8px;
+  margin: 4px 0;
+  max-height: 30vh;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.chat-usage {
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.chat-error {
+  font-size: 13px;
+  color: var(--danger);
+  margin: 6px 0;
+}
+
+.chat-warn {
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin: 0;
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input input {
+  flex: 1;
+}
+
+.chat-input button {
+  flex: 0 0 auto;
+}
+
+/* ---- 记录 ---- */
+.usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+.usage-grid div {
+  display: flex;
+  flex-direction: column;
+}
+
+.usage-grid span {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.usage-grid b {
+  font-size: 15px;
+}
+
+.list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.record-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.record {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  padding: 9px 11px;
+}
+
+.record-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.record-main b {
+  font-size: 15px;
+}
+
+.record-main i {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.record-main em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.record-del {
+  font-size: 11px;
+  color: var(--danger);
+  padding: 4px 6px;
+  flex: 0 0 auto;
+}
+
+/* ---- 站长设置 ---- */
+.provider-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.slot {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.slot[data-active] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.slot h4 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.visitor-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.visitor-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-top: 1px dashed var(--line);
+}
+
+.visitor-list li span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.visitor-list li i {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}

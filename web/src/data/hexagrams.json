@@ -1,0 +1,578 @@
+[
+  {
+    "number": 1,
+    "name": "乾",
+    "fullName": "乾为天",
+    "upper": "qian",
+    "lower": "qian",
+    "palace": "qian",
+    "lines": 63
+  },
+  {
+    "number": 2,
+    "name": "坤",
+    "fullName": "坤为地",
+    "upper": "kun",
+    "lower": "kun",
+    "palace": "kun",
+    "lines": 0
+  },
+  {
+    "number": 3,
+    "name": "屯",
+    "fullName": "水雷屯",
+    "upper": "kan",
+    "lower": "zhen",
+    "palace": "kan",
+    "lines": 17
+  },
+  {
+    "number": 4,
+    "name": "蒙",
+    "fullName": "山水蒙",
+    "upper": "gen",
+    "lower": "kan",
+    "palace": "li",
+    "lines": 34
+  },
+  {
+    "number": 5,
+    "name": "需",
+    "fullName": "水天需",
+    "upper": "kan",
+    "lower": "qian",
+    "palace": "kun",
+    "lines": 23
+  },
+  {
+    "number": 6,
+    "name": "讼",
+    "fullName": "天水讼",
+    "upper": "qian",
+    "lower": "kan",
+    "palace": "li",
+    "lines": 58
+  },
+  {
+    "number": 7,
+    "name": "师",
+    "fullName": "地水师",
+    "upper": "kun",
+    "lower": "kan",
+    "palace": "kan",
+    "lines": 2
+  },
+  {
+    "number": 8,
+    "name": "比",
+    "fullName": "水地比",
+    "upper": "kan",
+    "lower": "kun",
+    "palace": "kun",
+    "lines": 16
+  },
+  {
+    "number": 9,
+    "name": "小畜",
+    "fullName": "风天小畜",
+    "upper": "xun",
+    "lower": "qian",
+    "palace": "xun",
+    "lines": 55
+  },
+  {
+    "number": 10,
+    "name": "履",
+    "fullName": "天泽履",
+    "upper": "qian",
+    "lower": "dui",
+    "palace": "gen",
+    "lines": 59
+  },
+  {
+    "number": 11,
+    "name": "泰",
+    "fullName": "地天泰",
+    "upper": "kun",
+    "lower": "qian",
+    "palace": "kun",
+    "lines": 7
+  },
+  {
+    "number": 12,
+    "name": "否",
+    "fullName": "天地否",
+    "upper": "qian",
+    "lower": "kun",
+    "palace": "qian",
+    "lines": 56
+  },
+  {
+    "number": 13,
+    "name": "同人",
+    "fullName": "天火同人",
+    "upper": "qian",
+    "lower": "li",
+    "palace": "li",
+    "lines": 61
+  },
+  {
+    "number": 14,
+    "name": "大有",
+    "fullName": "火天大有",
+    "upper": "li",
+    "lower": "qian",
+    "palace": "qian",
+    "lines": 47
+  },
+  {
+    "number": 15,
+    "name": "谦",
+    "fullName": "地山谦",
+    "upper": "kun",
+    "lower": "gen",
+    "palace": "dui",
+    "lines": 4
+  },
+  {
+    "number": 16,
+    "name": "豫",
+    "fullName": "雷地豫",
+    "upper": "zhen",
+    "lower": "kun",
+    "palace": "zhen",
+    "lines": 8
+  },
+  {
+    "number": 17,
+    "name": "随",
+    "fullName": "泽雷随",
+    "upper": "dui",
+    "lower": "zhen",
+    "palace": "zhen",
+    "lines": 25
+  },
+  {
+    "number": 18,
+    "name": "蛊",
+    "fullName": "山风蛊",
+    "upper": "gen",
+    "lower": "xun",
+    "palace": "xun",
+    "lines": 38
+  },
+  {
+    "number": 19,
+    "name": "临",
+    "fullName": "地泽临",
+    "upper": "kun",
+    "lower": "dui",
+    "palace": "kun",
+    "lines": 3
+  },
+  {
+    "number": 20,
+    "name": "观",
+    "fullName": "风地观",
+    "upper": "xun",
+    "lower": "kun",
+    "palace": "qian",
+    "lines": 48
+  },
+  {
+    "number": 21,
+    "name": "噬嗑",
+    "fullName": "火雷噬嗑",
+    "upper": "li",
+    "lower": "zhen",
+    "palace": "xun",
+    "lines": 41
+  },
+  {
+    "number": 22,
+    "name": "贲",
+    "fullName": "山火贲",
+    "upper": "gen",
+    "lower": "li",
+    "palace": "gen",
+    "lines": 37
+  },
+  {
+    "number": 23,
+    "name": "剥",
+    "fullName": "山地剥",
+    "upper": "gen",
+    "lower": "kun",
+    "palace": "qian",
+    "lines": 32
+  },
+  {
+    "number": 24,
+    "name": "复",
+    "fullName": "地雷复",
+    "upper": "kun",
+    "lower": "zhen",
+    "palace": "kun",
+    "lines": 1
+  },
+  {
+    "number": 25,
+    "name": "无妄",
+    "fullName": "天雷无妄",
+    "upper": "qian",
+    "lower": "zhen",
+    "palace": "xun",
+    "lines": 57
+  },
+  {
+    "number": 26,
+    "name": "大畜",
+    "fullName": "山天大畜",
+    "upper": "gen",
+    "lower": "qian",
+    "palace": "gen",
+    "lines": 39
+  },
+  {
+    "number": 27,
+    "name": "颐",
+    "fullName": "山雷颐",
+    "upper": "gen",
+    "lower": "zhen",
+    "palace": "xun",
+    "lines": 33
+  },
+  {
+    "number": 28,
+    "name": "大过",
+    "fullName": "泽风大过",
+    "upper": "dui",
+    "lower": "xun",
+    "palace": "zhen",
+    "lines": 30
+  },
+  {
+    "number": 29,
+    "name": "坎",
+    "fullName": "坎为水",
+    "upper": "kan",
+    "lower": "kan",
+    "palace": "kan",
+    "lines": 18
+  },
+  {
+    "number": 30,
+    "name": "离",
+    "fullName": "离为火",
+    "upper": "li",
+    "lower": "li",
+    "palace": "li",
+    "lines": 45
+  },
+  {
+    "number": 31,
+    "name": "咸",
+    "fullName": "泽山咸",
+    "upper": "dui",
+    "lower": "gen",
+    "palace": "dui",
+    "lines": 28
+  },
+  {
+    "number": 32,
+    "name": "恒",
+    "fullName": "雷风恒",
+    "upper": "zhen",
+    "lower": "xun",
+    "palace": "zhen",
+    "lines": 14
+  },
+  {
+    "number": 33,
+    "name": "遁",
+    "fullName": "天山遁",
+    "upper": "qian",
+    "lower": "gen",
+    "palace": "qian",
+    "lines": 60
+  },
+  {
+    "number": 34,
+    "name": "大壮",
+    "fullName": "雷天大壮",
+    "upper": "zhen",
+    "lower": "qian",
+    "palace": "kun",
+    "lines": 15
+  },
+  {
+    "number": 35,
+    "name": "晋",
+    "fullName": "火地晋",
+    "upper": "li",
+    "lower": "kun",
+    "palace": "qian",
+    "lines": 40
+  },
+  {
+    "number": 36,
+    "name": "明夷",
+    "fullName": "地火明夷",
+    "upper": "kun",
+    "lower": "li",
+    "palace": "kan",
+    "lines": 5
+  },
+  {
+    "number": 37,
+    "name": "家人",
+    "fullName": "风火家人",
+    "upper": "xun",
+    "lower": "li",
+    "palace": "xun",
+    "lines": 53
+  },
+  {
+    "number": 38,
+    "name": "睽",
+    "fullName": "火泽睽",
+    "upper": "li",
+    "lower": "dui",
+    "palace": "gen",
+    "lines": 43
+  },
+  {
+    "number": 39,
+    "name": "蹇",
+    "fullName": "水山蹇",
+    "upper": "kan",
+    "lower": "gen",
+    "palace": "dui",
+    "lines": 20
+  },
+  {
+    "number": 40,
+    "name": "解",
+    "fullName": "雷水解",
+    "upper": "zhen",
+    "lower": "kan",
+    "palace": "zhen",
+    "lines": 10
+  },
+  {
+    "number": 41,
+    "name": "损",
+    "fullName": "山泽损",
+    "upper": "gen",
+    "lower": "dui",
+    "palace": "gen",
+    "lines": 35
+  },
+  {
+    "number": 42,
+    "name": "益",
+    "fullName": "风雷益",
+    "upper": "xun",
+    "lower": "zhen",
+    "palace": "xun",
+    "lines": 49
+  },
+  {
+    "number": 43,
+    "name": "夬",
+    "fullName": "泽天夬",
+    "upper": "dui",
+    "lower": "qian",
+    "palace": "kun",
+    "lines": 31
+  },
+  {
+    "number": 44,
+    "name": "姤",
+    "fullName": "天风姤",
+    "upper": "qian",
+    "lower": "xun",
+    "palace": "qian",
+    "lines": 62
+  },
+  {
+    "number": 45,
+    "name": "萃",
+    "fullName": "泽地萃",
+    "upper": "dui",
+    "lower": "kun",
+    "palace": "dui",
+    "lines": 24
+  },
+  {
+    "number": 46,
+    "name": "升",
+    "fullName": "地风升",
+    "upper": "kun",
+    "lower": "xun",
+    "palace": "zhen",
+    "lines": 6
+  },
+  {
+    "number": 47,
+    "name": "困",
+    "fullName": "泽水困",
+    "upper": "dui",
+    "lower": "kan",
+    "palace": "dui",
+    "lines": 26
+  },
+  {
+    "number": 48,
+    "name": "井",
+    "fullName": "水风井",
+    "upper": "kan",
+    "lower": "xun",
+    "palace": "zhen",
+    "lines": 22
+  },
+  {
+    "number": 49,
+    "name": "革",
+    "fullName": "泽火革",
+    "upper": "dui",
+    "lower": "li",
+    "palace": "kan",
+    "lines": 29
+  },
+  {
+    "number": 50,
+    "name": "鼎",
+    "fullName": "火风鼎",
+    "upper": "li",
+    "lower": "xun",
+    "palace": "li",
+    "lines": 46
+  },
+  {
+    "number": 51,
+    "name": "震",
+    "fullName": "震为雷",
+    "upper": "zhen",
+    "lower": "zhen",
+    "palace": "zhen",
+    "lines": 9
+  },
+  {
+    "number": 52,
+    "name": "艮",
+    "fullName": "艮为山",
+    "upper": "gen",
+    "lower": "gen",
+    "palace": "gen",
+    "lines": 36
+  },
+  {
+    "number": 53,
+    "name": "渐",
+    "fullName": "风山渐",
+    "upper": "xun",
+    "lower": "gen",
+    "palace": "gen",
+    "lines": 52
+  },
+  {
+    "number": 54,
+    "name": "归妹",
+    "fullName": "雷泽归妹",
+    "upper": "zhen",
+    "lower": "dui",
+    "palace": "dui",
+    "lines": 11
+  },
+  {
+    "number": 55,
+    "name": "丰",
+    "fullName": "雷火丰",
+    "upper": "zhen",
+    "lower": "li",
+    "palace": "kan",
+    "lines": 13
+  },
+  {
+    "number": 56,
+    "name": "旅",
+    "fullName": "火山旅",
+    "upper": "li",
+    "lower": "gen",
+    "palace": "li",
+    "lines": 44
+  },
+  {
+    "number": 57,
+    "name": "巽",
+    "fullName": "巽为风",
+    "upper": "xun",
+    "lower": "xun",
+    "palace": "xun",
+    "lines": 54
+  },
+  {
+    "number": 58,
+    "name": "兑",
+    "fullName": "兑为泽",
+    "upper": "dui",
+    "lower": "dui",
+    "palace": "dui",
+    "lines": 27
+  },
+  {
+    "number": 59,
+    "name": "涣",
+    "fullName": "风水涣",
+    "upper": "xun",
+    "lower": "kan",
+    "palace": "li",
+    "lines": 50
+  },
+  {
+    "number": 60,
+    "name": "节",
+    "fullName": "水泽节",
+    "upper": "kan",
+    "lower": "dui",
+    "palace": "kan",
+    "lines": 19
+  },
+  {
+    "number": 61,
+    "name": "中孚",
+    "fullName": "风泽中孚",
+    "upper": "xun",
+    "lower": "dui",
+    "palace": "gen",
+    "lines": 51
+  },
+  {
+    "number": 62,
+    "name": "小过",
+    "fullName": "雷山小过",
+    "upper": "zhen",
+    "lower": "gen",
+    "palace": "dui",
+    "lines": 12
+  },
+  {
+    "number": 63,
+    "name": "既济",
+    "fullName": "水火既济",
+    "upper": "kan",
+    "lower": "li",
+    "palace": "kan",
+    "lines": 21
+  },
+  {
+    "number": 64,
+    "name": "未济",
+    "fullName": "火水未济",
+    "upper": "li",
+    "lower": "kan",
+    "palace": "li",
+    "lines": 42
+  }
+]

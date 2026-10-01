@@ -1,0 +1,30 @@
+# 网页版镜像只需要 web/ —— 排除原生工程与本地杂物。
+.git
+.github
+.DS_Store
+*.MP4
+*.mov
+*.gif
+
+# 原生 Xcode 工程
+Yijing64/
+Yijing64.xcodeproj/
+YijingCore/
+.build/
+DerivedData/
+project.yml
+
+# 文档与脚本(镜像不需要)
+docs/
+AGENTS.md
+CHANGELOG.md
+README.md
+scripts/
+
+# web/ 里除 Dockerfile 上下文外的无用内容
+web/node_modules/
+web/dist/
+web/data/
+web/.env
+web/test/
+web/.env.local
