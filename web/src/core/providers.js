@@ -28,6 +28,12 @@ export const PROVIDERS = [
     defaultModel: 'deepseek-v4.1-flash',
     defaultBaseURL: 'https://opencode.ai/zen/go/v1',
   },
+  {
+    id: 'zx-gateway',
+    label: '博客 AI 网关',
+    defaultModel: '',
+    defaultBaseURL: 'http://localhost:3000/api/ai/v1',
+  },
   { id: 'custom', label: '自定义', defaultModel: '', defaultBaseURL: '' },
 ]
 
@@ -40,6 +46,7 @@ export const detectProvider = (baseURL) => {
   if (url.includes('opencode.ai')) return url.includes('/zen/go') ? 'opencodeGo' : 'opencodeZen'
   if (url.includes('deepseek')) return 'deepseek'
   if (url.includes('bigmodel.cn')) return 'zhipu'
+  if (url.includes('/api/ai/')) return 'zx-gateway'
   return 'custom'
 }
 

@@ -5,7 +5,7 @@ import { readJSON, readText, withLock, writeJSON, writeText } from './store.js'
 
 /** 与原生 LLMConfig / LLMChatViewModel 的默认值一致。 */
 const DEFAULTS = {
-  provider: 'deepseek',
+  provider: 'zx-gateway',
   maxTokens: 1000,
   thinkingMaxTokens: 4000,
   temperature: 0.7,
@@ -20,6 +20,12 @@ const keysFile = (dataDir) => path.join(dataDir, 'keys.json')
 /** @param {string} dataDir */
 export const loadSettings = async (dataDir) => normalize(await readJSON(settingsFile(dataDir), {}))
 
+/** 网关槽位的默认地址:优先环境变量(本地开发指向 localhost),否则固定内网 */
+const defaultBaseURL = (preset) =>
+  preset.id === 'zx-gateway' && process.env.ZX_AI_GATEWAY_URL
+    ? process.env.ZX_AI_GATEWAY_URL
+    : preset.defaultBaseURL
+
 /** @param {string} dataDir @param {any} stored */
 const normalize = (stored) => {
   const provider = PROVIDERS.some((p) => p.id === stored?.provider) ? stored.provider : DEFAULTS.provider
@@ -29,7 +35,7 @@ const normalize = (stored) => {
     const slot = stored?.providers?.[preset.id] ?? {}
     providers[preset.id] = {
       model: str(slot.model, preset.defaultModel),
-      baseURL: str(slot.baseURL, preset.defaultBaseURL),
+      baseURL: preset.id === 'zx-gateway' ? defaultBaseURL(preset) : str(slot.baseURL, defaultBaseURL(preset)),
     }
   }
   return {
@@ -62,7 +68,7 @@ export const saveSettings = (dataDir, patch) =>
         // 没传的字段保持原值；显式传空串表示「清空 → 回落该 provider 的预设默认值」
         next.providers[preset.id] = {
           model: 'model' in slot ? str(slot.model, preset.defaultModel) : prev.model,
-          baseURL: 'baseURL' in slot ? str(slot.baseURL, preset.defaultBaseURL) : prev.baseURL,
+          baseURL: 'baseURL' in slot ? str(slot.baseURL, defaultBaseURL(preset)) : prev.baseURL,
         }
       }
     }
@@ -84,11 +90,16 @@ export const resolveConfig = async (dataDir) => {
   const settings = await loadSettings(dataDir)
   const slot = settings.providers[settings.provider]
   const keys = await readKeys(dataDir)
+  const envToken = (process.env.ZX_AI_APP_TOKEN || '').trim()
+  const baseURL =
+    settings.provider === 'zx-gateway'
+      ? process.env.ZX_AI_GATEWAY_URL || defaultBaseURL(providerById('zx-gateway'))
+      : slot.baseURL
   return {
     provider: settings.provider,
     model: slot.model,
-    baseURL: slot.baseURL,
-    apiKey: keys[settings.provider] ?? '',
+    baseURL,
+    apiKey: keys[settings.provider] ?? (settings.provider === 'zx-gateway' ? envToken : ''),
     temperature: settings.temperature,
     maxTokens: settings.maxTokens,
     thinkingMaxTokens: settings.thinkingMaxTokens,
