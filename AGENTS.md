@@ -43,25 +43,26 @@ bash scripts/sync.sh
   security find-identity -v -p codesigning
   security cms -D -i ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision | grep -A1 ExpirationDate
   ```
-- **续签**：描述文件过期后直接运行 `bash scripts/sync.sh` 即可。脚本带 `CODE_SIGN_STYLE=Automatic` 与 `-allowProvisioningUpdates`，构建时会联网向 Apple 自动刷新描述文件，再经 `devicectl` 安装；证书未过期则无需重新「信任开发者」
-- **无线更新（本机 Wi-Fi 下实测不通，续签请插数据线）**
-  - 现象：Mac 与 iPhone 同在 `192.168.1.0/24`、同 SSID，手机解锁亮屏、`_remotepairing._tcp` 正常广播，但 `devicectl` 所有实时命令报 `device not found`、`tunnelState=unavailable`、TCP 49152 不通。**插数据线后一切正常**（`Acquired tunnel connection`、`tunnelState=connected`）
-  - **已排除的原因**（都实测过，不要重复排查）：
-    - 路由器：SG659HZ 固件 `Right=2` 普通用户登录后逐页确认 —— 防火墙等级虽显示「高」但「防攻击保护」**未勾选故不生效**（页面原文：「防攻击保护」勾选时防火墙等级设置方可生效）、MAC 过滤未启用、URL 过滤未启用、UPnP 见 `app_upnp_conf_t.gch`
-    - 配对：`devicectl manage unpair` + `manage pair` 重建后**仍然不通**，所以不是配对损坏
-    - macOS 本地网络隐私：`devicectl` 是 Apple 系统工具，有线下工作正常，不受该权限影响
-  - **iPhone 热点下一切正常**（`172.20.10.x`、`transportType=localNetwork`、TCP 49152 开放）。⚠️ 注意 iPhone 个人热点在 macOS 的 Wi‑Fi 列表里就是个普通网络名（实测为 `Zixiang的iPhone`），容易误以为「还在连原来的 Wi‑Fi」，实测前务必用 `ifconfig en0 | grep 'inet '` 确认网段
-  - 结论：**问题在 iPhone 端**——正常 Wi‑Fi 关联下丢弃入站单播，热点模式行为不同。无线续签不可依赖，**自动化按有线设计**
-  - ⚠️ **不要用 ping 判断连通性**：iOS 在有线/无线下都不响应 ICMP（实测有线连接正常时 `ping 192.168.1.2` 依然 100% 丢包），唯一可信的探针是 `xcrun devicectl device info lockState --device <UDID>`
-  - ⚠️ **ARP 能解析 ≠ 单播互通**：ARP 请求是广播、回复才是单播，能解析只证明一个方向通。且 macOS 的 ARP 表会残留**失效条目**（状态位 `I`），不可作为设备在线的证据
+- **续签**：运行 `bash scripts/sync.sh`（或 `auto-renew.sh`）即可。脚本带 `CODE_SIGN_STYLE=Automatic` 与 `-allowProvisioningUpdates`，构建时会联网向 Apple 刷新描述文件，再经 `devicectl` 安装；证书未过期则无需重新「信任开发者」
+- ⚠️ **有效期内 Xcode 不会主动换新描述文件**：只要本地缓存里还有一份满足要求的 profile，Xcode 就一直复用它（Apple 官方原文：*only request a new provisioning profile when it can't find one locally that satisfies the known requirements*）。**要提前续签必须先删缓存 profile 再构建**，Xcode 找不到本地可用的才会向 Apple 申请一份全新的 7 天（实测：删除后重建，`ExpirationDate` 会重置为「现在+7 天」）
+  - 缓存目录：`~/Library/Developer/Xcode/UserData/Provisioning Profiles/`（Apple 文档写的是 `~/Library/MobileDevice/Provisioning Profiles/`，本机不存在；两处都可能出现，都要处理）
+  - `auto-renew.sh` 的 `do_renew()` 已自动执行「备份 → 删除本 bundle 的缓存 profile → 构建 → 失败则还原」
+- **无线更新（可行：Mac 与 iPhone 需处于不同频段）**
+  - 根因：本网络的光猫 **SG659HZ（10G EPON ONU）的 5G 射频会隔离同频段客户端** —— `5G↔5G` 互访被挡（`devicectl` 实时命令报 `device not found`、`tunnelState=unavailable`），而 **`2.4G↔5G` 互通**（实测 Mac 连 2.4G 可达 5G 上的 iPhone：`Acquired tunnel connection`）
+  - 现象佐证：`user` 账号里 `SSIDIsolationEnable`/`VapIsolationEnable` 均为 `0`，但 Mac 仍协商成 `802.11ax`（5G 那条 BSSID 不受该开关约束）；关隔离 / 重启 / 160→80MHz / 关 11ax（`11axMode=0`）**均无效**
+  - **结论：不是 iPhone 端问题**（早期「iPhone 丢弃入站单播」的判断有误）；是光猫 5G 的同频段隔离，需超管 / 固件才能关掉
+  - **可用姿势**：让 Mac 与 iPhone **不同频段**即可无线续签（Mac 2.4G ↔ iPhone 5G）。`auto-renew.sh` 已自动化该切换
+  - ⚠️ 端口是**动态**的，不要按固定 `49152` 探测；唯一可信探针是 `xcrun devicectl device info lockState --device <UDID>`
+  - ⚠️ **不要用 ping 判断连通性**：iOS 在有线/无线下都不响应 ICMP（实测有线正常时 `ping` 仍 100% 丢包），唯一可信探针同上
+  - ⚠️ **ARP 能解析 ≠ 单播互通**：ARP 请求是广播、回复才是单播；macOS 的 ARP 表还会残留**失效条目**（状态位 `I`），不可作为设备在线的证据
   - ⚠️ **不要动 Xcode 的「Connects via Network when wired connection is not available」开关**：它只决定「未插线时是否启用无线」，与连不通无关，反复开关只会扰乱状态
-  - 若日后要在其他网络下验证无线，可用只读探针：
+  - 只读探针：
     ```
     dns-sd -B _remotepairing._tcp local    # 手机解锁后应立刻出现
-    nc -z -G 3 <手机IP> 49152              # 无线调试端口
     xcrun devicectl device info lockState --device <UDID>
     ```
-  - 描述文件过期后重新 provision 并重装真机版**会**触发配对失效（`tunnelState` 恒 `unavailable`），此时 `unpair` + `pair` 可恢复有线/无线的隧道协商：
+  - iPhone 个人热点下天然可用（`172.20.10.x`、`transportType=localNetwork`）；⚠️ 热点在 macOS Wi‑Fi 列表里就是个普通网络名（实测 `Zixiang的iPhone`），实测前用 `ifconfig en0 | grep 'inet '` 确认网段
+  - 描述文件过期后重新 provision 并重装真机版**可能**触发配对失效（`tunnelState` 恒 `unavailable`），此时 `unpair` + `pair` 可恢复（需数据线）：
     ```
     xcrun devicectl manage unpair --device <UDID>   # 需插数据线
     xcrun devicectl manage pair --device <UDID>     # 手机解锁亮屏，弹「信任此电脑」要信任
@@ -75,13 +76,19 @@ bash scripts/sync.sh
   launchctl kickstart -k gui/$(id -u)/com.liuzixiang.yijing64.autorenew   # 立即触发一次
   launchctl print gui/$(id -u)/com.liuzixiang.yijing64.autorenew          # 查看状态
   ```
-  逻辑：剩余 > 3 天直接退出（不构建）；进入 3 天窗口且设备在线（`pairingState=paired` 且 `transportType` 非空，**无线 `localNetwork` 优先、有线 `wired` 兜底**）则自动 `xcodebuild -allowProvisioningUpdates` + 重装真机；设备未连接则**每 24h 最多提示一次「解锁手机同 Wi-Fi 即可，不行就插线」**，不轰炸
+  逻辑：剩余 > 3 天直接退出（不构建、不切网）；进入 3 天窗口后，先在当前频段用 `devicectl device info lockState` 探测：可达则直接续签；不可达（如 Mac 在 5G、iPhone 也在 5G 被隔离）则**自动切到另一频段**（仅限自家 SSID 白名单），探测通过后 `xcodebuild -allowProvisioningUpdates` + 重装真机，**结束后自动切回原频段**（EXIT trap 兜底）；无法切换（在外网 / 缺密码）时每 24h 最多提示一次，不轰炸
+  - 续签前会**清掉本 bundle 的缓存 profile**（`do_renew()`），否则 Xcode 复用旧 profile、有效期不会 +7 天；构建失败则自动还原备份
+  - **手机端零动作**：`do_renew()` 只 `devicectl device install app`（后台静默重装），**不再 `process launch` / `terminate`**——续签不会自动打开 App。重装是必须的（描述文件嵌在 App 签名里），若续签瞬间 App 正开着会被系统关闭（iOS 行为，无法避免）
+  - 可达后若检测到 App 正在运行（`devicectl device info processes` 匹配 `/Yijing64.app/`），本轮**跳过不安装**、顺延到下个周期（避免"关掉你正在用的 App"）；已切频段的会立即切回；提示 `appRunningNudgeAt`，间隔同 `RENEW_NUDGE_GAP`
+  - 可达性探测带重试（切频段后隧道约需 1~2s 才建立，且偶有抖动）：切换后最多探 8 次、每次间隔 2s；当前频段探测也重试 3 次，避免误切
+  - 能切断网的只有"进入 3 天窗口且当前频段探不到"这一条路径；`--status` 与"剩余 > 3 天"的周期检查**绝不切网**。因 5G↔5G 被隔离，无法"先确认可续签再切"——**切过去本身就是探测**，不通/App 在跑则秒回原频段
   - 每轮检查前随机 `sleep 0~300s`（`JITTER_MAX_SECONDS`），避免固定 30 分钟网格与使用习惯锁相
-  - `transportType` 可能残留在本地缓存里，脚本会用 `devicectl device info lockState` **真实探针复核**，通不过就判定离线，避免续签白跑
-  - 日志 `.build/auto-renew.log`，状态 `.build/auto-renew.state`（记录 `phase` / `tunnelDownSince` / `renewNudgeAt` / `lastRenewAt`）
+  - 自家 Wi-Fi 的 `WIFI_PRIMARY_SSID` / `WIFI_ALT_SSID` / `WIFI_PASSWORD` 放在 **gitignored** 的 `scripts/wifi.local.sh`；缺失则跳过自动切换、降级为提示
+  - 日志 `.build/auto-renew.log`，状态 `.build/auto-renew.state`（记录 `renewNudgeAt` / `appRunningNudgeAt` / `lastRenewAt` / `lastSwitchAttemptAt`）
+  - 切网防抖 `SWITCH_RETRY_GAP`（默认 6h）：距上次切网尝试不足该间隔则只提示不切，避免手机长期锁屏时反复切网；`--force` 不受限
   - plist 在 `~/Library/LaunchAgents/com.liuzixiang.yijing64.autorenew.plist`（**不入库**，含绝对路径）
   - 后台跑 `codesign` 时系统可能弹一次钥匙串授权，需点「始终允许」
-- 需要插线或重新信任的情况：证书被吊销 / 换电脑 / 重装系统、设备配对失效、换新设备首次安装；以及无线中途失效时按上面的「无线不通时的排查顺序」处理。需要重新信任时在 iPhone「设置 → 通用 → VPN 与设备管理」操作
+- 需要插线或重新信任的情况：证书被吊销 / 换电脑 / 重装系统、设备配对失效、换新设备首次安装；以及无线中途失效时按上面的「无线更新」小节排查。需要重新信任时在 iPhone「设置 → 通用 → VPN 与设备管理」操作
 - 免费账号额度：每 7 天约可创建 10 个 App ID 等（本项目复用同一 App ID，一般不会触发）
 
 ## 发版流程
