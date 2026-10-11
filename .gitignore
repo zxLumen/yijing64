@@ -6,6 +6,9 @@ xcuserdata/
 __pycache__/
 /*.[mM][pP]4
 
+# 本机 Wi-Fi 配置（含密码）—— 绝不入库
+scripts/wifi.local.sh
+
 # 网页版(web/)
 web/node_modules/
 web/dist/
