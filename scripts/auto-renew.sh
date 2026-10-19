@@ -281,9 +281,10 @@ fi
 
 EXP_RAW="$(profile_expiry || true)"
 if [ -z "$EXP_RAW" ]; then
-  echo "未找到 $BUNDLE_ID 的描述文件"
-  notify "易经 续签异常" "未找到描述文件，请手动检查签名"
-  exit 0
+  # 缓存描述文件可能被 Xcode/清理删掉；这恰恰是需要续签的表现，
+  # 不能就此退出——交给 -allowProvisioningUpdates 重新生成。
+  echo "未找到 $BUNDLE_ID 的缓存描述文件 —— 视为需要续签，尝试重新生成"
+  EXP_RAW=""
 fi
 
 EXP_EPOCH="$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$EXP_RAW" "+%s" 2>/dev/null || echo 0)"
