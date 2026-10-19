@@ -298,6 +298,14 @@ fi
 
 echo "描述文件: $EXP_RAW (剩余 ${DAYS_LEFT} 天)"
 
+# 描述文件已过期 / 显式 --force 时，不再因"App 正在运行"而顺延：
+# 此时 App 本来就用不了，续签优先级最高（安装会替换掉运行中的实例）。
+PROFILE_EXPIRED=0
+awk -v d="$DAYS_LEFT" 'BEGIN{exit !(d<=0)}' && PROFILE_EXPIRED=1
+SKIP_IF_APP_RUNNING=1
+[ "$PROFILE_EXPIRED" -eq 1 ] && SKIP_IF_APP_RUNNING=0
+[ "$MODE" = "--force" ] && SKIP_IF_APP_RUNNING=0
+
 # --status：只报告，绝不切网
 if [ "$MODE" = "--status" ]; then
   cur_ssid="$(current_ssid || true)"
@@ -319,11 +327,12 @@ fi
 # ===== 2) 需要续签：先试当前频段，再按需切频段 =====
 
 if probe_device_retry 3; then
-  if app_is_running; then
+  if [ "$SKIP_IF_APP_RUNNING" -eq 1 ] && app_is_running; then
     echo "当前频段可达，但 App 正在运行，本轮跳过（不安装、手机端零动作）"
     notify_once appRunningNudgeAt "易经 暂缓续签" "易经 App 正在运行，为避免打扰已顺延，退出 App 后将自动续签" "$RENEW_NUDGE_GAP"
     exit 0
   fi
+  [ "$SKIP_IF_APP_RUNNING" -eq 0 ] && echo "（描述文件已过期/--force：忽略 App 运行状态，直接续签）"
   echo "当前频段可达（SSID=$(current_ssid)），直接续签"
   do_renew
   exit 0
@@ -363,10 +372,11 @@ RESTORE_ON_EXIT=1
 if wifi_join "$ALT_SSID"; then
   echo "已切到 $ALT_SSID (IP=$(ifconfig "$WIFI_INTERFACE" 2>/dev/null | awk '/inet /{print $2; exit}'))"
   if probe_device_retry 8; then
-    if app_is_running; then
+    if [ "$SKIP_IF_APP_RUNNING" -eq 1 ] && app_is_running; then
       echo "已切到 ${ALT_SSID}，但 App 正在运行，本轮跳过（立即切回，手机端零动作）"
       notify_once appRunningNudgeAt "易经 暂缓续签" "易经 App 正在运行，为避免打扰已顺延，退出 App 后将自动续签" "$RENEW_NUDGE_GAP"
     else
+      [ "$SKIP_IF_APP_RUNNING" -eq 0 ] && echo "（描述文件已过期/--force：忽略 App 运行状态，直接续签）"
       do_renew
     fi
   else
