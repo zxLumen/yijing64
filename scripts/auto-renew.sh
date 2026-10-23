@@ -11,7 +11,7 @@ DEVICE_UDID="${DEVICE_UDID:-00008030-000804100CE8802E}"
 DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM:-T8TG4WAR43}"
 APP=".build/device/Build/Products/Debug-iphoneos/Yijing64.app"
 
-PROFILE_DAYS_THRESHOLD="${PROFILE_DAYS_THRESHOLD:-3}"
+PROFILE_DAYS_THRESHOLD="${PROFILE_DAYS_THRESHOLD:-5}"
 RENEW_NUDGE_GAP="${RENEW_NUDGE_GAP:-86400}"
 NOTIFY_MIN_GAP="${NOTIFY_MIN_GAP:-43200}"
 SWITCH_RETRY_GAP="${SWITCH_RETRY_GAP:-21600}"
@@ -115,17 +115,21 @@ current_ssid() {
 
 # 切到指定 SSID 并等待接口拿到 IP（成功 0 / 失败 1）
 wifi_join() {
-  local ssid="$1" i cur
+  local ssid="$1" i cur attempt
   [ -n "$ssid" ] || return 1
-  networksetup -setairportnetwork "$WIFI_INTERFACE" "$ssid" "$WIFI_PASSWORD" >/dev/null 2>&1 || true
-  i=0
-  while [ "$i" -lt "$WIFI_JOIN_TIMEOUT" ]; do
-    cur="$(current_ssid || true)"
-    if [ "$cur" = "$ssid" ] && ifconfig "$WIFI_INTERFACE" 2>/dev/null | grep -q 'inet '; then
-      return 0
-    fi
-    sleep 1
-    i=$((i + 1))
+  # 偶发第一次关联会失败（macOS 节流/扫描未就绪），重试 3 轮
+  for attempt in 1 2 3; do
+    networksetup -setairportnetwork "$WIFI_INTERFACE" "$ssid" "$WIFI_PASSWORD" >/dev/null 2>&1 || true
+    i=0
+    while [ "$i" -lt "$WIFI_JOIN_TIMEOUT" ]; do
+      cur="$(current_ssid || true)"
+      if [ "$cur" = "$ssid" ] && ifconfig "$WIFI_INTERFACE" 2>/dev/null | grep -q 'inet '; then
+        return 0
+      fi
+      sleep 1
+      i=$((i + 1))
+    done
+    [ "$attempt" -lt 3 ] && { echo "=> 关联 ${ssid} 失败，重试 ($attempt/3)"; sleep 3; }
   done
   return 1
 }
@@ -218,15 +222,28 @@ restore_cached_profiles() {
 }
 
 do_renew() {
-  local bk="$ROOT/.build/profile-backup" new_exp now
+  local bk="$ROOT/.build/profile-backup" new_exp now build_log
   rm -rf "$bk"; mkdir -p "$bk"
   purge_cached_profiles "$bk"
 
   echo "==> 续签并重装真机版"
+  build_log="$ROOT/.build/last-build.log"
   if ! xcodebuild -project "$PROJECT" -scheme "$SCHEME" \
       -destination "id=$DEVICE_UDID" -derivedDataPath .build/device build \
       CODE_SIGN_STYLE=Automatic CODE_SIGNING_ALLOWED=YES -allowProvisioningUpdates \
-      DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM"; then
+      DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" >"$build_log" 2>&1; then
+    grep -E "error:" "$build_log" 2>/dev/null | tail -3 || true
+    # 免费个人团队靠钥匙串里的账号凭据；失效时会出现这些关键字。
+    if grep -qE "Invalid credentials|missing Xcode-Username" "$build_log" 2>/dev/null; then
+      notify "易经 需要重建 Xcode 账号" "钥匙串账号凭据失效：请在 Xcode → Settings → Accounts 删除该账号再重新添加（只重登可能无效）"
+      echo "!! 原因：钥匙串账号凭据失效 —— 需在 Xcode 删掉账号再重新添加"
+    elif grep -q "No Accounts" "$build_log" 2>/dev/null; then
+      notify "易经 需要重建 Xcode 账号" "xcodebuild 读不到账号：请在 Xcode → Settings → Accounts 删除账号后重新添加并登录"
+      echo "!! 原因：xcodebuild 读不到账号（删掉账号再重建）"
+    elif grep -q "No profiles for" "$build_log" 2>/dev/null; then
+      notify "易经 需要重建 Xcode 账号" "找不到可用描述文件，通常是账号凭据失效；请删除并重新添加账号"
+      echo "!! 原因：没有可用描述文件（多半是账号凭据失效）"
+    fi
     echo "!! 构建失败，还原缓存描述文件"
     restore_cached_profiles "$bk"
     return 1
